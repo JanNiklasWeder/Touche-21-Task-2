@@ -29,13 +29,13 @@ def main():
         qrel, {args.measure})
 
     results = evaluator.evaluate(run)
-    print(results)
+    
     def print_line(measure, scope, value):
         #scope = query_id = topic_id
         print('{:25s}{:8s}{:.22f}'.format(measure, scope, value))
 
-    for query_id, query_measures in sorted(results.items()):
-        print(query_measures)
+    for query_id, query_measures in results.items():
+   
         for measure, value in sorted(query_measures.items()):
             print_line(measure, query_id, value)
 
