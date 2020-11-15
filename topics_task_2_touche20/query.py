@@ -26,7 +26,7 @@ def api(data, size):
         "apikey": "67fac2d9-0f98-4c19-aab0-18c848bfa130",
         "query": data,
         "size": size,
-        "index": ["cw09", "cw12"],
+        "index": ["cw12"],
     }
 
     return requests.post(url, data=request_data).json()
@@ -48,7 +48,7 @@ for topic in answers:
     print(topic)
     rank = 1
     for response in topic['results']:
-        buffer = topicId, "Q0", response['uuid'], rank, response['score'], "JackSparrowVanilla"
+        buffer = topicId, "Q0", response['trec_id'], rank, response['score'], "JackSparrowVanilla"
         print(buffer)
         out.write(" ".join(map(str, buffer)) + "\n")
         rank += 1
