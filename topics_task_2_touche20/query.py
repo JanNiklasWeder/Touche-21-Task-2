@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 import sys
 
 if(len(sys.argv) !=2):
-    print("usage: \"python query.py topicFiles.xml\"")
+    print("usage: \"python query.py topics-task-2.xml\"")
     sys.exit(1)
 
 def get_titles(file):
@@ -34,10 +34,10 @@ def api(data, size):
 
 topics = get_titles(sys.argv[1])
 out = open("output", "w")
-
+size=50
 answers = []
 for topic in topics:
-    answers.append(api(topic, 5))
+    answers.append(api(topic, size))
     print("Getting response for", topic)
 
 
