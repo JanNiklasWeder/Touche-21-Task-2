@@ -51,7 +51,7 @@ def wordnet_syns(title):
     for token in new_title:
         syn_token=find_syns_word(token)
         syn_pro_title.extend([syn for syn in list(set(syn_token)) if syn != str(token.text)]) #distinct and remove the same words
-    print(syn_pro_title)
+    #print(syn_pro_title)
     synonyms_by_titles.writelines(" ".join(list(set(syn_pro_title))) + "\n")
     title = temp + " " + " ".join(list(set(syn_pro_title)))
     return title
