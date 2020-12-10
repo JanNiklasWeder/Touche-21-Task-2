@@ -59,14 +59,17 @@ def api(topic, size, arg_value):
         '''
         arg_scores_all_uuids={}
         for uuid, doc in docs.items():
-            res = argument_score_2.response_targer_api(doc)
-            arg_scores_all_uuids[uuid]=argument_score_2.avg_argScore(res)
-        
+            targer_res = argument_score_2.response_targer_api(doc)
+            arg_scores_all_uuids[uuid]=argument_score_2.avg_argScore(targer_res)
+        print(arg_scores_all_uuids)
         resp=add_arg_score_to_response(arg_scores_all_uuids,resp)
         return resp
 def add_arg_score_to_response(avg_scores,resp):
     new_resp=[]
-    for doc in resp:
+    print("hallo")
+    print(type(resp))
+    for doc in resp['results']:
+        print(doc)
         actual_uuid = doc['uuid']
         print(actual_uuid)
         relScore=float(doc['score'])
@@ -74,7 +77,7 @@ def add_arg_score_to_response(avg_scores,resp):
         agrScore = avg_scores[actual_uuid]
         doc['score'] = relScore*(1+agrScore)
         new_resp.append(doc)
-    return sorted(new_resp,key= lambda doc: doc['score'], reverse=True)
+    return {'results':sorted(new_resp,key= lambda doc: doc['score'], reverse=True)}
 
 def get_p_values_plain_html(uuid):
     url = "https://www.chatnoir.eu/cache?uuid="+uuid+"&index=cw12&raw"#&plain"
