@@ -4,9 +4,8 @@ import requests
 import os
 import xml.etree.ElementTree as ET
 import sys
-#import m_preprocessing
-import expansion_query_api
-import argument_score_2
+import m_preprocessing
+import query_api
 '''
 if(len(sys.argv) !=4):
     print("usage: \"python query.py topics-task-2.xml n_topics size lemma sw syn\"")
@@ -33,16 +32,13 @@ sw = args.sw
 syn = args.syn
 
 def main():
-    topics = expansion_query_api.get_titles(file) #topics = [(topic, true/false) for n_topics]
-    '''
-    true: comparative topics
-    false: superlative oder other topics
-    '''
-    out = open("expanded_output_ntopics_"+str(n_topics)+"_"+str(size)+"_"+str(lemma)+"_"+str(sw)+"_"+str(syn), "w")
+    topics = query_api.get_titles(file)
+    out = open("output_ntopics_"+str(n_topics)+"_"+str(lemma)+"_"+str(sw)+"_"+str(syn), "w")
     answers = []
-    for topic, arg_value in topics:
-        answers.append(expansion_query_api.api(topic, size, arg_value)) 
+    for topic in topics:
         print("Getting response for", topic)
+        answers.append(query_api.expanded_api(topic, size))
+        
 
 
     # assumption about topic id and correct rank | both not validated

@@ -2,13 +2,9 @@ import requests
 import json
 import bs4
 import regex as re
+import time
 
-def remove_htmlTags(snippet):
-    import re
-    clean = re.compile('<.*?>')
-    return re.sub(clean, '', snippet)
-
-#get argument labels from target
+#get argument labels from targer
 def response_targer_api(doc):
     
     import regex as re
@@ -18,8 +14,29 @@ def response_targer_api(doc):
     headers = {
         'Content-Type': 'text/plain'
     }
-    response = requests.request("POST", url, headers=headers, data=payload.encode('utf-8'))
-    return response.json()
+    '''
+    def targer(retries=0, m_url, m_headers, m_payload):
+        try:
+            response = requests.request("POST", m_url, headers=m_headers, data=m_payload.encode('utf-8'), timeout=10)
+            response.raise_for_status()
+        except requests.exceptions.HTTPError:
+            return targer(retries+1, m_url, m_headers,m_payload)
+        return response.json()
+    '''
+    # Move on with your life! Yay!
+    #response = requests.request("POST", url, headers=headers, data=payload)
+    #response=targer(0,url, headers, payload)
+    def targer():
+        try:
+            response = requests.request("POST", url, headers=headers, data=payload.encode('utf-8'))
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.HTTPError:
+            time.sleep(1)
+            return targer()
+    response = targer()
+    print(response)
+    return response
 
 def avg_argScore(resp_as_list):
     #
@@ -41,3 +58,8 @@ def avg_argScore(resp_as_list):
             return 0
         else:
             return avg_argScore #arg_labels_probas
+
+def remove_htmlTags(snippet):
+    import re
+    clean = re.compile('<.*?>')
+    return re.sub(clean, '', snippet)

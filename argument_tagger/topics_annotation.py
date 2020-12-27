@@ -25,3 +25,9 @@ def comparative_topic(text):
         if token.text == "or" or token.lemma_ == "prefer": #when verbs, ex: prefer, using "or" for recognation?!
             return 1
     return 0
+def isArgument(topic_id):
+    not_args_list= [6,13]
+    if topic_id not in not_args_list:
+        return True
+    else:
+        return False
