@@ -5,8 +5,8 @@ import os
 import xml.etree.ElementTree as ET
 import sys
 #import m_preprocessing
-import expansion_query_api
-import argument_score_2
+import main_expansion_query_api
+import main_argument_score_2
 '''
 if(len(sys.argv) !=4):
     print("usage: \"python query.py topics-task-2.xml n_topics size lemma sw syn\"")
@@ -21,8 +21,8 @@ parser.add_argument('size')
 parser.add_argument('lemma')
 parser.add_argument('sw')
 parser.add_argument('syn')
-#parser.add_argument('targer_model')
-#parser.add_argument('underscore')
+parser.add_argument('targer_model')
+parser.add_argument('underscore')
 args = parser.parse_args()
 
 assert os.path.exists(args.xml)
@@ -32,21 +32,19 @@ size = args.size
 lemma = args.lemma
 sw = args.sw
 syn = args.syn
-#targer_model = args.targer_model
-#underscore=args.underscore
-targer_model = "classifyWD"
-underscore="0.7"
+targer_model = args.targer_model
+underscore = args.underscore
 
 def main():
-    topics = expansion_query_api.get_titles(file) #topics = [(topic, true/false) for n_topics]
+    topics = main_expansion_query_api.get_titles(file) #topics = [(topic, true/false) for n_topics]
     '''
     true: comparative topics
     false: superlative oder other topics
     '''
-    out = open("expanded_output_ntopics_"+str(n_topics)+"_"+str(size)+"_"+str(lemma)+"_"+str(sw)+"_"+str(syn)+"_"+str(targer_model)+"_underscore_"+str(underscore), "w")
+    out = open("outputs/expanded_output_ntopics_"+str(n_topics)+"_"+str(size)+"_"+str(lemma)+"_"+str(sw)+"_"+str(syn)+"_"+str(targer_model)+"_underscore_"+str(underscore), "w")
     answers = []
     for topic, arg_value in topics:
-        answers.append(expansion_query_api.api(topic, size, arg_value)) 
+        answers.append(main_expansion_query_api.api(topic, size, arg_value)) 
         print("Getting response for", topic)
 
 
@@ -58,7 +56,7 @@ def main():
         rank = 1
         for response in topic['results']:
             buffer = topicId, "Q0", response['trec_id'], rank, response['score'], "JackSparrowVanilla"
-            print(buffer)
+            #print(buffer)
             out.write(" ".join(map(str, buffer)) + "\n")
             rank += 1
         topicId += 1

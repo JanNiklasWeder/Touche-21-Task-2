@@ -1,12 +1,11 @@
-import topics_annotation
+import main_topics_annotation
 from main_retrieval import n_topics
 import requests
 import xml.etree.ElementTree as ET
-import argument_score_2
+import main_argument_score_2
 import regex as re
 import time
-#import pandas as pd
-#file="topics-task-2.xml"
+from main_retrieval import targer_model, underscore
 
 '''
 expand get_titles for comparative topics, not superlative topics
@@ -23,7 +22,7 @@ def get_titles(file):
         if i<=int(n_topics):
             title = title.text.strip()
             #if topics_annotation.comparative_topic(title) == True: #checking if topic needs arguments/premise/claims
-            if topics_annotation.isArgument(i) == True:
+            if main_topics_annotation.isArgument(i) == True:
                 buffer.append((title, True))
             else:
                 buffer.append((title,False))
@@ -40,17 +39,16 @@ def api(topic, size, arg_value):
         "size": size,
         "index": ["cw12"],
     }
-
-    def chatnoir():
+    def chatnoir_req():
         try:
-            response = requests.post(url,data=request_data)
-            response.raise_for_status()
-            return response.json()
+            response_=requests.post(url, data=request_data)
+            response_.raise_for_status()
+            return response_.json()
         except requests.exceptions.HTTPError:
             time.sleep(1)
-            return chatnoir()
-    #resp = chatnoir()
-    resp=requests.post(url, data=request_data).json()
+            return chatnoir_req()    
+    resp = chatnoir_req()
+    #resp=requests.post(url, data=request_data).json()
 
     if arg_value==False: #not argumentative topic so that doesn not need arguments scores -> relevance score will not be updated
         return resp
@@ -69,9 +67,9 @@ def api(topic, size, arg_value):
         '''
         arg_scores_all_uuids={}
         for uuid, doc in docs.items():
-            targer_res = argument_score_2.response_targer_api(doc)
-            arg_scores_all_uuids[uuid]=argument_score_2.avg_argScore(targer_res)
-        print(arg_scores_all_uuids)
+            targer_res = main_argument_score_2.response_targer_api(doc, targer_model)
+            arg_scores_all_uuids[uuid]=main_argument_score_2.get_argument_score(targer_res, targer_model, underscore)
+        print(arg_scores_all_uuids.values())
         resp=add_arg_score_to_response(arg_scores_all_uuids,resp)
         return resp
 def add_arg_score_to_response(avg_scores,resp):
@@ -83,6 +81,7 @@ def add_arg_score_to_response(avg_scores,resp):
         
         relScore=float(doc['score'])
         agrScore = avg_scores[actual_uuid]
+        #change end_score
         doc['score'] = relScore*(1+agrScore)
         new_resp.append(doc)
     return {'results':sorted(new_resp,key= lambda doc: doc['score'], reverse=True)} #response with new sorting by new score

@@ -4,8 +4,8 @@ import requests
 import os
 import xml.etree.ElementTree as ET
 import sys
-import m_preprocessing
-import query_api
+#import main_preprocessing
+import main_query_api
 '''
 if(len(sys.argv) !=4):
     print("usage: \"python query.py topics-task-2.xml n_topics size lemma sw syn\"")
@@ -32,12 +32,12 @@ sw = args.sw
 syn = args.syn
 
 def main():
-    topics = query_api.get_titles(file)
+    topics = main_query_api.get_titles(file)
     out = open("output_ntopics_"+str(n_topics)+"_"+str(lemma)+"_"+str(sw)+"_"+str(syn), "w")
     answers = []
     for topic in topics:
         print("Getting response for", topic)
-        answers.append(query_api.expanded_api(topic, size))
+        answers.append(main_query_api.base_chatnoir_api(topic, size))
         
 
 
