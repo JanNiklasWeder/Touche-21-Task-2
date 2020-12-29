@@ -21,7 +21,8 @@ parser.add_argument('size')
 parser.add_argument('lemma')
 parser.add_argument('sw')
 parser.add_argument('syn')
-
+#parser.add_argument('targer_model')
+#parser.add_argument('underscore')
 args = parser.parse_args()
 
 assert os.path.exists(args.xml)
@@ -31,6 +32,10 @@ size = args.size
 lemma = args.lemma
 sw = args.sw
 syn = args.syn
+#targer_model = args.targer_model
+#underscore=args.underscore
+targer_model = "classifyWD"
+underscore="0.7"
 
 def main():
     topics = expansion_query_api.get_titles(file) #topics = [(topic, true/false) for n_topics]
@@ -38,7 +43,7 @@ def main():
     true: comparative topics
     false: superlative oder other topics
     '''
-    out = open("expanded_output_ntopics_"+str(n_topics)+"_"+str(size)+"_"+str(lemma)+"_"+str(sw)+"_"+str(syn), "w")
+    out = open("expanded_output_ntopics_"+str(n_topics)+"_"+str(size)+"_"+str(lemma)+"_"+str(sw)+"_"+str(syn)+"_"+str(targer_model)+"_underscore_"+str(underscore), "w")
     answers = []
     for topic, arg_value in topics:
         answers.append(expansion_query_api.api(topic, size, arg_value)) 

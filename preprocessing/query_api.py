@@ -33,13 +33,14 @@ def expanded_api(data, size):
     url = 'https://www.chatnoir.eu/api/v1/_search'
     all_responses = []
     
-    expansion=[data]
+    expansion={}
+    expansion['origin'] = data
     #print(data + "\n")
     #print(m_preprocessing.prepro(data, lemma, sw, syn))
-    expansion.append(m_preprocessing.prepro(data, lemma, sw, syn))
+    expansion['expand'] = m_preprocessing.prepro(data, lemma, sw, syn)
     #expansion.add(m_preprocessing.synFastText(data))
     
-    for data in expansion:
+    for desc, data in expansion.items():
         print("TEXT: " + data)
         request_data = {
             "apikey": "67fac2d9-0f98-4c19-aab0-18c848bfa130",
@@ -56,21 +57,23 @@ def expanded_api(data, size):
                 time.sleep(1)
                 return chatnoir_req()    
         resp = chatnoir_req()
-        all_responses.append(resp)
+        all_responses.append((desc,resp))
     return merge_results(all_responses, size)
 def merge_results(all_responses, size):
     response={}
     all_results=[]
-    for resp in all_responses:
+    for desc, resp in all_responses:
         results=resp['results']
         all_results.append(results)
     from itertools import chain
     all_results = list(chain.from_iterable(all_results))
     print(len(all_results))
     sorted_all_results_by_score= sorted(all_results,key= lambda doc: doc['score'], reverse=True)
-    sorted_all_results = remove_identical_uuid(sorted_all_results_by_score)
+    sorted_all_results = remove_identical_uuids(sorted_all_results_by_score)
     response={'results':sorted_all_results[:int(size)]}
     return response
-def remove_identical_uuid(sorted_all_results_by_score):
-
-    return result_uuid  
+def remove_identical_uuids(sorted_all_results_by_score):
+    end_all_results = sorted_all_results_by_score
+    #using only the doc with uuid first appeared in the list
+    
+    return end_all_results

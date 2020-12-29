@@ -4,6 +4,7 @@ import requests
 import xml.etree.ElementTree as ET
 import argument_score_2
 import regex as re
+import time
 #import pandas as pd
 #file="topics-task-2.xml"
 
@@ -39,17 +40,29 @@ def api(topic, size, arg_value):
         "size": size,
         "index": ["cw12"],
     }
+
+    def chatnoir():
+        try:
+            response = requests.post(url,data=request_data)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.HTTPError:
+            time.sleep(1)
+            return chatnoir()
+    #resp = chatnoir()
     resp=requests.post(url, data=request_data).json()
-    if arg_value==False: #not comparative topic so that doesn not need arguments scores -> relevance score not to updated
+
+    if arg_value==False: #not argumentative topic so that doesn not need arguments scores -> relevance score will not be updated
         return resp
-    else: #comparative topic - using argument scores from targer api
+    else: #argumentative topic - using argument scores from targer api - score will be updated
         results = resp['results']
+
         #uuids_snippets = [ (results[i]['uuid'],remove_htmlTags(results[i]['snippet'])) for i in range(0,len(results))]
-        #docs= get_texts_from_origin_webpages(uuids_snippets) #get paragraphs from original websites with uuids
+        #docs= get_texts_from_origin_webpages(uuids_snippets) #get snippets + paragraphs from original websites with uuids
         
         uuids_titles_snippets = [ (results[i]['uuid'],remove_htmlTags(results[i]['title']), remove_htmlTags(results[i]['snippet'])) for i in range(0,len(results))]
-        #docs= get_texts_title_snippet(uuids_titles_snippets)
-        docs= get_texts_title_snippet_plaintext(uuids_titles_snippets)
+        docs= get_texts_title_snippet(uuids_titles_snippets) #only titles and snippets
+        #docs= get_texts_title_snippet_plaintext(uuids_titles_snippets) # titles, snippets and plaintext
         '''
         check arg_value for target api premise and claims
         resp['results] = list of documents for a topic -> need "UUID" for argument_score

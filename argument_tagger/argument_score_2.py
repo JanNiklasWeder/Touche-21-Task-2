@@ -3,14 +3,26 @@ import json
 import bs4
 import regex as re
 import time
-
+#from main_retrieval import targer_model
+#from main_retrieval import underscore
 #get argument labels from targer
+
+#ex: targer = classifyWD, classifyNewWD, classifyWD_dep
+
+global targer_model
+targer_model = "classifyWD"
+global underscore
+underscore = "0.7"
+
 def response_targer_api(doc):
     
     import regex as re
-    
+    global targer_model
     payload=doc #doc already removed all special characters
-    url = "https://demo.webis.de/targer-api/classifyWD"
+    url = "https://demo.webis.de/targer-api/"+str(targer_model)
+    print(url)
+    #ex: targer = classifyWD, classifyNewWD, classifyWD_dep
+
     headers = {
         'Content-Type': 'text/plain'
     }
@@ -50,11 +62,13 @@ def avg_argScore(resp_as_list):
                 sum_probs = sum_probs + float(ent['prob'])
                 arg_labels_probas.append((ent['label'],ent['prob']))
     #average the probas from arg_labels
+    global underscore
+    print(underscore)
     if count_arg_labels==0:
         return 0
     else:
         avg_argScore = sum_probs/count_arg_labels
-        if avg_argScore<=0.6:
+        if avg_argScore<=0.7:
             return 0
         else:
             return avg_argScore #arg_labels_probas
