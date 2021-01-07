@@ -41,7 +41,8 @@ def main():
     true: comparative topics
     false: superlative oder other topics
     '''
-    out = open("outputs/expanded_output_ntopics_"+str(n_topics)+"_"+str(size)+"_"+str(lemma)+"_"+str(sw)+"_"+str(syn)+"_"+str(targer_model)+"_underscore_"+str(underscore), "w")
+    str_score=str(underscore).replace('.','')
+    out = open("files/expanded_output_ntopics_"+str(n_topics)+"_"+str(size)+"_"+str(lemma)+"_"+str(sw)+"_"+str(syn)+"_"+str(targer_model)+"_underscore_"+str_score+".run", "w")
     answers = []
     for topic, arg_value in topics:
         answers.append(main_expansion_query_api.api(topic, size, arg_value)) 
@@ -52,7 +53,7 @@ def main():
     topicId = 1
 
     for topic in answers:
-        print(topic)
+        #print(topic)
         rank = 1
         for response in topic['results']:
             buffer = topicId, "Q0", response['trec_id'], rank, response['score'], "JackSparrowVanilla"

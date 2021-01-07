@@ -7,8 +7,26 @@ import string
 import nltk
 from nltk.corpus import wordnet
 
+'''
+Problems:
+- how can sleep better -> does not need premises/claims??
+- what are difference ... -> ?
+'''
+
 synonyms_by_titles = open('synonyms_by_titles.txt', 'w')
 top_syns = 5
+def get_comparation_superlation_nouns_from_original_data(data):
+    nouns_as_string=[]
+    doc = nlp(data)
+    annotations = ['CC','CD',
+                    'JJ','JJR','JJS',
+                    'RB','RBR','RBS', 
+                    'NN', 'NNS','NNP','NNPS', 
+                    'VB']
+    for token in doc:
+        if token.tag_ in annotations:
+            nouns_as_string.append(token.text)
+    return ' '.join(nouns_as_string)
 
 def synFastText(data):
     return data

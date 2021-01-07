@@ -11,9 +11,10 @@ import time
 #ex: targer = classifyWD, classifyNewWD, classifyWD_dep
 
 #global targer_model
-targer_model = "classifyWD"
+
+#targer_model = "classifyWD"
 #global underscore
-underscore = "0.7"
+#underscore = "0.7"
 
 def response_targer_api(doc, targer_model):
     

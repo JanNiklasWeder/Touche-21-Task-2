@@ -20,6 +20,9 @@ parser.add_argument('size')
 parser.add_argument('lemma')
 parser.add_argument('sw')
 parser.add_argument('syn')
+parser.add_argument('comparative_relation')
+parser.add_argument('weights')
+parser.add_argument('trec_id_cal')
 
 args = parser.parse_args()
 
@@ -30,14 +33,19 @@ size = args.size
 lemma = args.lemma
 sw = args.sw
 syn = args.syn
-
+relation = args.comparative_relation
+weights = args.weights
+trec_id_cal = args.trec_id_cal
 def main():
     topics = main_query_api.get_titles(file)
-    out = open("output_ntopics_"+str(n_topics)+"_"+str(lemma)+"_"+str(sw)+"_"+str(syn), "w")
+    weights_as_string = weights
+    for e in [';','.']:
+        weights_as_string = weights_as_string.replace(e,"")
+    out = open("files/output_ntopics_"+str(n_topics)+"_"+str(lemma)+"_"+str(sw)+"_"+str(syn)+"_"+str(relation)+"_"+str(weights_as_string)+"_"+str(trec_id_cal)+".run", "w")
     answers = []
     for topic in topics:
-        print("Getting response for", topic)
-        answers.append(main_query_api.base_chatnoir_api(topic, size))
+        #print("Getting response for", topic)
+        answers.append(main_query_api.expanded_api(topic, size))
         
 
 
@@ -45,11 +53,11 @@ def main():
     topicId = 1
 
     for topic in answers:
-        print(topic)
+        #print(topic)
         rank = 1
         for response in topic['results']:
             buffer = topicId, "Q0", response['trec_id'], rank, response['score'], "JackSparrowVanilla"
-            print(buffer)
+            #print(buffer)
             out.write(" ".join(map(str, buffer)) + "\n")
             rank += 1
         topicId += 1

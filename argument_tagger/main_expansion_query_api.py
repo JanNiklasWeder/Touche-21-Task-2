@@ -69,7 +69,7 @@ def api(topic, size, arg_value):
         for uuid, doc in docs.items():
             targer_res = main_argument_score_2.response_targer_api(doc, targer_model)
             arg_scores_all_uuids[uuid]=main_argument_score_2.get_argument_score(targer_res, targer_model, underscore)
-        print(arg_scores_all_uuids.values())
+        #print(arg_scores_all_uuids.values())
         resp=add_arg_score_to_response(arg_scores_all_uuids,resp)
         return resp
 def add_arg_score_to_response(avg_scores,resp):
