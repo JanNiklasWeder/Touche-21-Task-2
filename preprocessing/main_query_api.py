@@ -7,6 +7,8 @@ from collections import Counter
 from itertools import chain
 preprocessed_topics = open('preprocessed_topics_20'+'_ntopics_'+ n_topics +'_'+ lemma +'_'+ sw +'_'+ syn + '.txt', 'w')
 
+query_by_annotation=False
+
 def get_titles(file):
     tree = ET.parse(file)
     root = tree.getroot()
@@ -20,8 +22,12 @@ def get_titles(file):
         i=i+1
     return buffer
 def base_chatnoir_api(data, size):
-    url = 'https://www.chatnoir.eu/api/v1/_search'
-
+    #query_by_annotation
+    if query_by_annotation==True:
+        data = main_preprocessing.get_comparation_superlation_nouns_from_original_data(data)
+        print(data + "\n")
+    
+    url = 'https://www.chatnoir.eu/api/v1/_search' 
     request_data = {
         "apikey": "67fac2d9-0f98-4c19-aab0-18c848bfa130",
         "query": data,
@@ -31,6 +37,8 @@ def base_chatnoir_api(data, size):
     resp=requests.post(url, data=request_data)
     #print(resp)
     return resp.json()
+#def query_by_annotations(data):
+#    return main_preprocessing.get_comparation_superlation_nouns_from_original_data(data)
 def auto_query_expansion(data, lemma, sw, syn, relation):
     queries_dict={}
     queries_dict['original'] = data
@@ -41,6 +49,7 @@ def auto_query_expansion(data, lemma, sw, syn, relation):
 def expanded_api(data, size):
     url = 'https://www.chatnoir.eu/api/v1/_search'
     all_responses = {}
+    
     
     all_queries = auto_query_expansion(data, lemma, sw, syn, relation)
 
@@ -80,6 +89,7 @@ def chatnoir_score_update(desc, results):
         #print(result['score'])
         updated_results.append(result)
     return (desc, updated_results)
+'''
 def check_id(ids):
     #print("check if same ids occurs")
     #print(Counter(ids))
@@ -98,6 +108,7 @@ def get_resp_after_merging(all_responses, size):
     sorted_all_results = remove_same_trec_ids(sorted_all_results_by_score)
     response={'results':sorted_all_results[:int(size)]}
     return response
+'''
 def merge_results(all_responses, size):
     #all_responses: dict[desc] = response
     desc_results_updated_score =[]

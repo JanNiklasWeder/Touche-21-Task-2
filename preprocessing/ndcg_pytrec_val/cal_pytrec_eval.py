@@ -39,9 +39,8 @@ def main():
         for measure, value in sorted(query_measures.items()):
             avg_DCG.append(value)
             #print_line(measure, query_id, value)
-    #print(avg_DCG)
-    #print(mean(avg_DCG))
-    print('avg of nDCG {:f}'.format(mean(avg_DCG)))
+    
+    print(mean(avg_DCG))
 
 if __name__ == "__main__":
     sys.exit(main())

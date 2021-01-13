@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 import sys
 #import main_preprocessing
 import main_query_api
+import main_preprocessing
 '''
 if(len(sys.argv) !=4):
     print("usage: \"python query.py topics-task-2.xml n_topics size lemma sw syn\"")
@@ -41,13 +42,14 @@ def main():
     weights_as_string = weights
     for e in [';','.']:
         weights_as_string = weights_as_string.replace(e,"")
-    out = open("files/output_ntopics_"+str(n_topics)+"_"+str(lemma)+"_"+str(sw)+"_"+str(syn)+"_"+str(relation)+"_"+str(weights_as_string)+"_"+str(trec_id_cal)+".run", "w")
+    out = open("files_2/output_ntopics_"+str(n_topics)+"_"+str(lemma)+"_"+str(sw)+"_"+str(syn)+"_"+str(relation)+"_"+str(weights_as_string)+"_"+str(trec_id_cal)+".run", "w")
     answers = []
     for topic in topics:
         #print("Getting response for", topic)
         answers.append(main_query_api.expanded_api(topic, size))
         
-
+        #topic as annotations represent
+        #answers.append(main_query_api.base_chatnoir_api(topic, size))
 
     # assumption about topic id and correct rank | both not validated
     topicId = 1

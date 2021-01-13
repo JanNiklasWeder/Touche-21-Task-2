@@ -7,6 +7,22 @@ from statistics import mean
 import pytrec_eval
 from plotly import graph_objects as go
 
+import xml.etree.ElementTree as ET
+import pandas as pd
+
+n_topics=50
+
+def get_titles(file):
+    tree = ET.parse(file)
+    root = tree.getroot()
+    titles = []
+    i=1
+    for title in root.iter('title'):
+        if i<=int(n_topics):
+            title = title.text.strip()
+            titles.append(title)
+    return titles
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -58,8 +74,9 @@ def main():
             #print_line(measure, query_id, value)
             second_query_value[query_id] = value
     print(' avg of second aprroach nDCG {:f}'.format(mean(second_nDCGs)))
-
+    
     #display comparison plotting between first and second approach
+    '''
     fig2 = go.Figure(
         data=[
             go.Bar(
@@ -81,7 +98,7 @@ def main():
         )
     )
     fig2.show()
-
+'''
     fig3 = go.Figure(
         data=[
             go.Scatter(
@@ -105,5 +122,17 @@ def main():
         )
     )
     fig3.show()
+    
+     #print out all queries that model is better then base chatnoir (first)
+    better_queries=[]
+    for key, value in first_query_value.items():
+        if second_query_value[key]>value:
+            better_queries.append(key)
+    print(better_queries)
+    
+    titles = get_titles("topics-task-2.xml")
+    for query_id in better_queries:
+        print(titles[int(query_id)-1])
+    
 if __name__ == "__main__":
     sys.exit(main())
