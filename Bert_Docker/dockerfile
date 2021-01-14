@@ -1,0 +1,31 @@
+FROM nvidia/cuda:11.0-base-ubuntu20.04
+
+# Create a working directory
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    ca-certificates \
+    sudo \
+    git \
+    bzip2 \
+    libx11-6 \
+ && rm -rf /var/lib/apt/lists/*
+
+# Install Miniconda and Python 3.8
+ENV CONDA_AUTO_UPDATE_CONDA=false
+ENV PATH=/root/miniconda/bin:$PATH
+RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py39_4.9.2-Linux-x86_64.sh \
+ && chmod +x ~/miniconda.sh \
+ && ~/miniconda.sh -b -p ~/miniconda \
+ && rm ~/miniconda.sh 
+ 
+#Create env.
+COPY environment.yml .
+RUN conda env create -f environment.yml
+RUN conda init bash
+RUN echo "conda activate project" > ~/.bashrc
+
+COPY BertParagraph.py .
+COPY /res .
+ENTRYPOINT ["conda", "run", "-n", "project", "python", "BertParagraph.py", "topics-task-2.xml", "touche2020-task2-relevance-withbaseline.qrels"]
