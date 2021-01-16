@@ -101,30 +101,17 @@ else:
 
 data = pd.merge(Documents, qrels, how="inner", on=["trec_id"])
 
-id=0
+id=1
 topic_df = []
 for topic in topics:
     buffer = id,topic
     topic_df.append(buffer)
-    id=+1
+    id=id+1
 
 topic_df = pd.DataFrame(topic_df, columns=['TopicID','Topic'])
 data = pd.merge(data, topic_df, how="inner", on=["TopicID"])
 
 frames = []
-if SelectByTopic :
-    for i in range(6):
-        buffer =(data.loc[data['TopicID'] == random.uniform(0, size)])
-        data[~data.isin(buffer)].dropna()
-        frames.append(buffer)
-        test_df = pd.concat(frames)
-else:
-    test_df = data.sample(frac=0.10)
-    data[~data.isin(test_df)].dropna()
-    validate_df = data.sample(frac=0.05)
-    data[~data.isin(validate_df)].dropna()
-    train_df = data
-
 train_data = []
 validate_data = []
 test_data = []
@@ -132,11 +119,44 @@ test_data = []
 print(data)
 
 
+if SelectByTopic :
+    numbers = []
+    for i in range(6):
+        while True:
+            number = round(random.uniform(0, 50))
+            if not (number in numbers):
+                numbers.append(number)
+                break
+
+        buffer =data.loc[data['TopicID'] == number]
+        print(number)
+        print(buffer)
+        frames.append(buffer)
+    test_df = pd.concat(frames)
+    data = pd.concat([data,test_df]).drop_duplicates(keep=False)
+
+
+    validate_df = data.sample(frac=0.05)
+    data = pd.concat([data, validate_df]).drop_duplicates(keep=False)
+    train_df = data
+
+else:
+    test_df = data.sample(frac=0.10)
+    data[~data.isin(test_df)].dropna()
+    validate_df = data.sample(frac=0.05)
+    data[~data.isin(validate_df)].dropna()
+    train_df = data
+
+
+
+
+
+
 train_df = train_df[['Topic', 'FullText','Score']]
 train_df.rename(columns={'Topic':"text_a", 'FullText':"text_b",'Score':"labels"}, inplace=True)
 
-validate_df = validate_df[['Topic', 'FullText','Score']]
-validate_df.rename(columns={'Topic':"text_a", 'FullText':"text_b",'Score':"labels"}, inplace=True)
+validate_df = validate_df[['Topic', 'FullText', 'Score']]
+validate_df.rename(columns={'Topic': "text_a", 'FullText': "text_b", 'Score': "labels"}, inplace=True)
 
 test_df = test_df[['Topic', 'FullText','Score']]
 test_df.rename(columns={'Topic':"text_a", 'FullText':"text_b",'Score':"labels"}, inplace=True)
