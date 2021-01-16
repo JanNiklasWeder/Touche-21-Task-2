@@ -1,5 +1,7 @@
 #!/usr/bin/python
+
 from simpletransformers.classification import (ClassificationModel, ClassificationArgs)
+from pathlib import Path
 import logging
 
 import os
@@ -11,16 +13,12 @@ import pandas as pd
 import time
 import random
 
-
 logging.basicConfig(level=logging.INFO)
 transformers_logger = logging.getLogger("transformers")
 transformers_logger.setLevel(logging.WARNING)
 
-retrieveDocuments=False
-SelectByTopic = True
-
-if (len(sys.argv) != 3):
-    print("usage: \"python query.py topicFiles.xml qrels\"")
+if (len(sys.argv) != 4):
+    print("usage: 'python BertParagraph.py <topicFiles.xml> <qrels> <SelectTrainByTopic>'")
     sys.exit(1)
 
 
@@ -66,6 +64,7 @@ def retrievingFullDocuments(uuid, index):
     return data
 
 
+SelectByTopic = sys.argv[4]
 topics = get_titles(sys.argv[1])
 print(topics)
 qrels = pd.read_csv(sys.argv[2], sep=" ", names=["TopicID", "Spacer", "trec_id", "Score"])
@@ -74,7 +73,14 @@ answers = []
 texts = []
 TopicID = 1
 results = []
-IDS = pd.read_csv('touche20-task2-docs-ID-UUID', names=["uuid", "trec_id"])
+
+# check if ID-UUID exists
+if Path('res/touche20-task2-docs-ID-UUID').is_file():
+    print("[INFO] Reading touche20-task2-docs-ID-UUID")
+    IDS = pd.read_csv('res/touche20-task2-docs-ID-UUID', names=["uuid", "trec_id"])
+else:
+    print("[ERROR] Please provide touche20-task2-docs-ID-UUID in the location './res/touche20-task2-docs-ID-UUID'")
+    exit(1)
 
 print(qrels)
 print(IDS)
@@ -82,33 +88,35 @@ print(IDS)
 data = pd.merge(IDS, qrels, how="inner", on=["trec_id"])
 size = IDS.shape[0]
 
-if retrieveDocuments:
+if Path('res/UUID-Text.csv').is_file():
+    print("[INFO] UUID-Text.csv found. Loading...")
+    Documents = pd.read_csv('res/UUID-Text.csv', names=['uuid', 'trec_id', 'FullText'])
+else:
+    print("[INFO] UUID-Text.csv not found at './res/touche20-task2-docs-ID-UUID'. Creating ...")
     fullText = []
 
     print("[INFO] Retrieving Documents")
-    for index,row in IDS.iterrows():
+    for index, row in IDS.iterrows():
         uuid = row['uuid']
         trec_id = row['trec_id']
-        buffer = uuid,trec_id,retrievingFullDocuments(uuid,"cw12")
+        buffer = uuid, trec_id, retrievingFullDocuments(uuid, "cw12")
         fullText.append(buffer)
-        if index%100==0: print("[PROGRESS] ",index," of ", size)
+        if index % 100 == 0: print("[PROGRESS] ", index, " of ", size)
 
-    Documents = pd.DataFrame(fullText, columns=['uuid','trec_id', 'FullText'])
-
-    Documents.to_csv(path_or_buf="UUID-Text.csv",index=False)
-else:
-    Documents = pd.read_csv('UUID-Text.csv', names=['uuid','trec_id', 'FullText'])
+    Documents = pd.DataFrame(fullText, columns=['uuid', 'trec_id', 'FullText'])
+    print("[INFO] Saving UUID-Text.csv")
+    Documents.to_csv(path_or_buf="./res/UUID-Text.csv", index=False)
 
 data = pd.merge(Documents, qrels, how="inner", on=["trec_id"])
 
-id=1
+id = 1
 topic_df = []
 for topic in topics:
-    buffer = id,topic
+    buffer = id, topic
     topic_df.append(buffer)
-    id=id+1
+    id = id + 1
 
-topic_df = pd.DataFrame(topic_df, columns=['TopicID','Topic'])
+topic_df = pd.DataFrame(topic_df, columns=['TopicID', 'Topic'])
 data = pd.merge(data, topic_df, how="inner", on=["TopicID"])
 
 frames = []
@@ -118,8 +126,7 @@ test_data = []
 
 print(data)
 
-
-if SelectByTopic :
+if SelectByTopic:
     numbers = []
     for i in range(6):
         while True:
@@ -128,13 +135,12 @@ if SelectByTopic :
                 numbers.append(number)
                 break
 
-        buffer =data.loc[data['TopicID'] == number]
+        buffer = data.loc[data['TopicID'] == number]
         print(number)
         print(buffer)
         frames.append(buffer)
     test_df = pd.concat(frames)
-    data = pd.concat([data,test_df]).drop_duplicates(keep=False)
-
+    data = pd.concat([data, test_df]).drop_duplicates(keep=False)
 
     validate_df = data.sample(frac=0.05)
     data = pd.concat([data, validate_df]).drop_duplicates(keep=False)
@@ -147,20 +153,14 @@ else:
     data[~data.isin(validate_df)].dropna()
     train_df = data
 
-
-
-
-
-
-train_df = train_df[['Topic', 'FullText','Score']]
-train_df.rename(columns={'Topic':"text_a", 'FullText':"text_b",'Score':"labels"}, inplace=True)
+train_df = train_df[['Topic', 'FullText', 'Score']]
+train_df.rename(columns={'Topic': "text_a", 'FullText': "text_b", 'Score': "labels"}, inplace=True)
 
 validate_df = validate_df[['Topic', 'FullText', 'Score']]
 validate_df.rename(columns={'Topic': "text_a", 'FullText': "text_b", 'Score': "labels"}, inplace=True)
 
-test_df = test_df[['Topic', 'FullText','Score']]
-test_df.rename(columns={'Topic':"text_a", 'FullText':"text_b",'Score':"labels"}, inplace=True)
-
+test_df = test_df[['Topic', 'FullText', 'Score']]
+test_df.rename(columns={'Topic': "text_a", 'FullText': "text_b", 'Score': "labels"}, inplace=True)
 
 print(train_df)
 print(test_df)
@@ -175,7 +175,7 @@ model_args.overwrite_output_dir = True
 model_args.wandb_project = "project"
 
 # Create a ClassificationModel
-model = ClassificationModel('bert', 'bert-base-cased', use_cuda=False,num_labels=3, args=model_args)
+model = ClassificationModel('bert', 'bert-base-cased', use_cuda=False, num_labels=3, args=model_args)
 
 # Train the model
 print("[INFO] Starting training")
