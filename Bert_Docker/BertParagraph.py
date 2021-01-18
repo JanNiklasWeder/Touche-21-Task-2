@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 transformers_logger = logging.getLogger("transformers")
 transformers_logger.setLevel(logging.WARNING)
 
-if (len(sys.argv) != 4):
+if len(sys.argv) != 4:
     print("usage: 'python BertParagraph.py <topicFiles.xml> <qrels> <SelectTrainByTopic>'")
     sys.exit(1)
 
@@ -36,7 +36,7 @@ def simpleSearch(data, size):
     url = 'https://www.chatnoir.eu/api/v1/_search'
 
     request_data = {
-        "apikey": "67fac2d9-0f98-4c19-aab0-18c848bfa130",
+        "apikey": "--",
         "query": data,
         "size": size,
         "index": ["cw12"],
@@ -64,7 +64,7 @@ def retrievingFullDocuments(uuid, index):
     return data
 
 
-SelectByTopic = sys.argv[4]
+SelectByTopic = sys.argv[3]
 topics = get_titles(sys.argv[1])
 print(topics)
 qrels = pd.read_csv(sys.argv[2], sep=" ", names=["TopicID", "Spacer", "trec_id", "Score"])
@@ -88,6 +88,7 @@ print(IDS)
 data = pd.merge(IDS, qrels, how="inner", on=["trec_id"])
 size = IDS.shape[0]
 
+# check if UUID-Text exists else create
 if Path('res/UUID-Text.csv').is_file():
     print("[INFO] UUID-Text.csv found. Loading...")
     Documents = pd.read_csv('res/UUID-Text.csv', names=['uuid', 'trec_id', 'FullText'])
@@ -99,9 +100,25 @@ else:
     for index, row in IDS.iterrows():
         uuid = row['uuid']
         trec_id = row['trec_id']
-        buffer = uuid, trec_id, retrievingFullDocuments(uuid, "cw12")
-        fullText.append(buffer)
-        if index % 100 == 0: print("[PROGRESS] ", index, " of ", size)
+
+        for x in range(10):  #
+            try:
+                buffer = uuid, trec_id, retrievingFullDocuments(uuid, "cw12")
+                fullText.append(buffer)
+                str_error = None
+            except Exception as str_error:
+                pass
+
+            if str_error:
+                time.sleep(10)
+                if x == 9:
+                    print("[ERROR] Cannot retrieve Documents. Exiting ...")
+                    exit(1)
+            else:
+                break
+
+        if index % 100 == 0:
+            print("[PROGRESS] ", index, " of ", size)
 
     Documents = pd.DataFrame(fullText, columns=['uuid', 'trec_id', 'FullText'])
     print("[INFO] Saving UUID-Text.csv")
@@ -126,6 +143,7 @@ test_data = []
 
 print(data)
 
+# Separate trainings test and evaluation data
 if SelectByTopic:
     numbers = []
     for i in range(6):
@@ -148,9 +166,11 @@ if SelectByTopic:
 
 else:
     test_df = data.sample(frac=0.10)
-    data[~data.isin(test_df)].dropna()
+    data = pd.concat([data, test_df]).drop_duplicates(keep=False)
+
     validate_df = data.sample(frac=0.05)
-    data[~data.isin(validate_df)].dropna()
+    data = pd.concat([data, validate_df]).drop_duplicates(keep=False)
+
     train_df = data
 
 train_df = train_df[['Topic', 'FullText', 'Score']]
@@ -167,7 +187,7 @@ print(test_df)
 print(validate_df)
 
 # Optional model configuration
-os.environ['WANDB_API_KEY'] = '5d78ab478578484b83144e9a4c3d2919391da815'
+os.environ['WANDB_API_KEY'] = '--'
 model_args = ClassificationArgs()
 model_args.num_train_epochs = 1
 model_args.reprocess_input_data = True

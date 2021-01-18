@@ -27,5 +27,5 @@ RUN conda init bash
 RUN echo "conda activate project" > ~/.bashrc
 
 COPY BertParagraph.py .
-COPY /res .
-ENTRYPOINT ["conda", "run", "-n", "project", "python", "BertParagraph.py", "topics-task-2.xml", "touche2020-task2-relevance-withbaseline.qrels"]
+COPY /res /res
+ENTRYPOINT ["conda", "run", "-n", "project", "python", "BertParagraph.py", "./res/topics-task-2.xml", "./res/topics-task-2.xml ./res/touche2020-task2-relevance-withbaseline.qrels", "True"]
