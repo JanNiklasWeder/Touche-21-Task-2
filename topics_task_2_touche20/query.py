@@ -23,13 +23,15 @@ def api(data, size):
     url = 'https://www.chatnoir.eu/api/v1/_search'
 
     request_data = {
-        "apikey": "67fac2d9-0f98-4c19-aab0-18c848bfa130",
+        "apikey": "--",
         "query": data,
         "size": size,
         "index": ["cw12"],
     }
 
     return requests.post(url, data=request_data).json()
+
+
 
 
 topics = get_titles(sys.argv[1])
