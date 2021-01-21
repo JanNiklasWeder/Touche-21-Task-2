@@ -2,8 +2,8 @@
 
 from simpletransformers.classification import (ClassificationModel, ClassificationArgs)
 from pathlib import Path
+from datetime import datetime
 import logging
-
 import os
 import sys
 import xml.etree.ElementTree as ET
@@ -17,8 +17,8 @@ logging.basicConfig(level=logging.INFO)
 transformers_logger = logging.getLogger("transformers")
 transformers_logger.setLevel(logging.WARNING)
 
-if len(sys.argv) != 4:
-    print("usage: 'python BertParagraph.py <topicFiles.xml> <qrels> <SelectTrainByTopic>'")
+if len(sys.argv) != 5:
+    print("usage: 'python BertParagraph.py <topicFiles.xml> <qrels> <SelectTrainByTopic> <ModelName>'")
     sys.exit(1)
 
 
@@ -65,6 +65,7 @@ def retrievingFullDocuments(uuid, index):
 
 
 SelectByTopic = sys.argv[3]
+projectName = sys.argv[4]
 topics = get_titles(sys.argv[1])
 print(topics)
 qrels = pd.read_csv(sys.argv[2], sep=" ", names=["TopicID", "Spacer", "trec_id", "Score"])
@@ -136,7 +137,6 @@ for topic in topics:
 topic_df = pd.DataFrame(topic_df, columns=['TopicID', 'Topic'])
 data = pd.merge(data, topic_df, how="inner", on=["TopicID"])
 
-frames = []
 train_data = []
 validate_data = []
 test_data = []
@@ -146,7 +146,8 @@ print(data)
 # Separate trainings test and evaluation data
 if SelectByTopic:
     numbers = []
-    for i in range(6):
+    frames = []
+    for i in range(4):
         while True:
             number = round(random.uniform(0, 50))
             if not (number in numbers):
@@ -160,8 +161,23 @@ if SelectByTopic:
     test_df = pd.concat(frames)
     data = pd.concat([data, test_df]).drop_duplicates(keep=False)
 
-    validate_df = data.sample(frac=0.05)
+    frames = []
+    numbers = []
+    for i in range(2):
+        while True:
+            number = round(random.uniform(0, 50))
+            if not (number in numbers):
+                numbers.append(number)
+                break
+
+        buffer = data.loc[data['TopicID'] == number]
+        print(number)
+        print(buffer)
+        frames.append(buffer)
+
+    validate_df = pd.concat(frames)
     data = pd.concat([data, validate_df]).drop_duplicates(keep=False)
+
     train_df = data
 
 else:
@@ -189,13 +205,18 @@ print(validate_df)
 # Optional model configuration
 os.environ['WANDB_API_KEY'] = '--'
 model_args = ClassificationArgs()
-model_args.num_train_epochs = 1
+model_args.num_train_epochs = 20
 model_args.reprocess_input_data = True
 model_args.overwrite_output_dir = True
-model_args.wandb_project = "project"
+model_args.wandb_project = projectName
 
 # Create a ClassificationModel
 model = ClassificationModel('bert', 'bert-base-cased', use_cuda=False, num_labels=3, args=model_args)
+#model = ClassificationModel("bert", "./saves/")
+
+#Freeze coder Layers
+for param in model.base_model.parameters():
+    param.requires_grad = False
 
 # Train the model
 print("[INFO] Starting training")
@@ -210,9 +231,18 @@ result, model_outputs, wrong_predictions = model.eval_model(
     test_df
 )
 
+timeStamp = datetime.now()
+savePath = "./saves/" + projectName + timeStamp.strftime("%d-%m-%Y_%H:%M")
+model.save_model(savePath)
+savePath=savePath+"/data"
+train_df.to_csv(path_or_buf=savePath+"/train.csv", index=True)
+test_df.to_csv(path_or_buf=savePath+"/test.csv", index=True)
+validate_df.to_csv(path_or_buf=savePath+"/validate.csv", index=True)
+
 # Make predictions with the model
 print("[INFO] Starting predictions")
 time.sleep(5)
+output =[]
 for index, row in validate_df.iterrows():
     predictions, raw_outputs = model.predict(
         [
@@ -222,4 +252,10 @@ for index, row in validate_df.iterrows():
             ]
         ]
     )
-    print(predictions, "Bert: ", raw_outputs, "Expected: ", row['labels'])
+    buffer = predictions, "Bert: ", raw_outputs, "Expected: ", row['labels']
+    output.append(buffer)
+    print(buffer)
+
+# Save evaluations
+output = pd.concat(output)
+output.to_csv(path_or_buf=savePath+"/evaluation.csv", index=True)
