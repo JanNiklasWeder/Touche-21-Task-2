@@ -17,21 +17,22 @@ def OpenPageRank(website):
     output = []
     seconds = 10
 
-    for x in range(10):  #
+    for x in range(10):
+
+        success = False
         try:
             output = requests.get(url, params=request_data, headers=headers).json()['response']
-            str_error = None
+            success = True
         except Exception as str_error:
-            pass
-
-        if str_error:
             print("[ERROR] Cannot reach OpenPageRank. Retrying in %s seconds" % seconds)
+            print("[ERROR] Code: %s" % str_error)
             time.sleep(seconds)
             seconds += seconds
             if x == 9:
-                print("[ERROR] Cannot reach OpenPageRank. Exiting ...")
+                print("[ERROR] Failed 10 times. Exiting ...")
                 exit(1)
-        else:
+
+        if success:
             break
 
     output = output[0]['page_rank_decimal']

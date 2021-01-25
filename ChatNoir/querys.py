@@ -34,10 +34,10 @@ def api(data, size):
     seconds = 10
 
     for x in range(10):  #
-        succes = False
+        success = False
         try:
             output = requests.post(url, data=request_data).json()['results']
-            succes = True
+            success = True
         except Exception as str_error:
             print("[ERROR] Cannot retrieve Documents. Retrying in %s seconds" % seconds)
             print("[ERROR] Code: %s" % str_error)
@@ -47,7 +47,7 @@ def api(data, size):
                 print("[ERROR] Failed 10 times. Exiting ...")
                 exit(1)
 
-        if succes:
+        if success:
             break
 
     return output
@@ -71,11 +71,12 @@ def get_response(querysize):
         for topic in topics:
             print("[INFO] Getting response for '%s'" % topic)
             response = api(topic, querysize)
-            #print(response)
+            # print(response)
             for answer in response:
                 buffer = topicID, answer['trec_id'], answer['uuid'], answer['target_hostname'], answer['score']
                 answers.append(buffer)
 
+        topicID += 1
         Data = (pandas.DataFrame(answers, columns=['TopicID', 'TrecID', 'UUID', 'target_hostname', 'Score']))
         Data.to_csv(path_or_buf="../ChatNoir/res/" + querysize, index=False)
     return Data
