@@ -210,13 +210,24 @@ model_args.reprocess_input_data = True
 model_args.overwrite_output_dir = True
 model_args.wandb_project = projectName
 
+#Freeze encoder Layers
+model_args.train_custom_parameters_only = True
+model_args.custom_parameter_groups = [
+    {
+        "params": ["classifier.weight"],
+        #"lr": 1e-3,
+    },
+    {
+        "params": ["classifier.bias"],
+        #"lr": 1e-3,
+        #"weight_decay": 0.0,
+    },
+]
+
 # Create a ClassificationModel
 model = ClassificationModel('bert', 'bert-base-cased', use_cuda=False, num_labels=3, args=model_args)
 #model = ClassificationModel("bert", "./saves/")
 
-#Freeze coder Layers
-for param in model.base_model.parameters():
-    param.requires_grad = False
 
 # Train the model
 print("[INFO] Starting training")
