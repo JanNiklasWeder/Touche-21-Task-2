@@ -21,10 +21,22 @@ parser.add_argument('size')
 parser.add_argument('lemma')
 parser.add_argument('sw')
 parser.add_argument('syn')
-parser.add_argument('comparative_relation')
+parser.add_argument('comparative_relation') #annotation = True
 parser.add_argument('weights')
 parser.add_argument('trec_id_cal')
+'''
+xml: topic datei
+n_topics: 50
+size: 
+lemma = True
+Stopwords= False
+Synonym = True
+Annotation = True
+Weights
+trec_id_cal: duplikate trec_id -> max/average
 
+run main_retrieval.py topics-task-2.xml 50 15 True False True True 2.25;1.75;1 max
+'''
 args = parser.parse_args()
 
 assert os.path.exists(args.xml)
