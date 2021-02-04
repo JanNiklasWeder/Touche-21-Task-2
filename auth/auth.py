@@ -1,11 +1,17 @@
 #!/usr/bin/python
+from pathlib import Path
+
 import pandas
 
-keys = pandas.read_csv("../auth/keys.csv")
 
+class Auth:
 
-def get_key(name):
-    buffer = keys.loc[keys['Names'] == name]
-    buffer = (buffer['Keys'].values[0])
-    #print(buffer)
-    return buffer
+    def __init__(self, working_directory: Path):
+        self.wD = Path(working_directory / "auth")
+        self.keyFile = pandas.read_csv(self.wD / "keys.csv")
+
+    def get_key(self, name):
+        buffer = self.keyFile.loc[self.keyFile['Names'] == name]
+        buffer = (buffer['Keys'].values[0])
+        # print(buffer)
+        return buffer
