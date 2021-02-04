@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import logging
 import time
 import requests
 import xml.etree.ElementTree as ET
@@ -8,10 +9,12 @@ from typing import List
 import os
 import argparse
 
+from tqdm import tqdm
+
 from auth.auth import Auth
 
 
-def get_titles(file:Path) -> List[str]:
+def get_titles(file: Path) -> List[str]:
     tree = ET.parse(file)
     root = tree.getroot()
     buffer = []
@@ -58,18 +61,18 @@ class ChatNoir:
                 output = response.json()['results']
                 success = True
             except Exception as str_error:
-                print("[ERROR] Cannot retrieve Documents. Retrying in %s seconds" % seconds)
-                print("[ERROR] Code: %s" % str_error)
+                logging.warning("Cannot retrieve Documents. Retrying in %s seconds" % seconds)
+                logging.warning("Code: %s" % str_error)
 
                 try:
-                    print("[ERROR] Response was : %s" % response)
+                    logging.warning("Response was : %s" % response)
                 except:
                     continue
 
                 time.sleep(seconds)
                 seconds += seconds
                 if attempt == 9:
-                    print("[ERROR] Failed 10 times. Exiting ...")
+                    logging.critical("Failed 10 times. Exiting ...")
                     exit(1)
 
             if success:
@@ -80,30 +83,44 @@ class ChatNoir:
     def get_response(self, querys: List[str], querysize: str) -> pandas.DataFrame:
         querysize = str(querysize)
 
-        # Loading Data for querysize if available otherwise requesting
-
+        # Loading Data for querysize if available
         save_path = self.workingDir / 'res' / (querysize + ".csv")
         if Path(save_path).is_file():
-            print("[INFO] Loading ChatNoir query size: ", querysize)
-            Data = pandas.read_csv(save_path,
-                                   names=['TopicID', 'TrecID', 'UUID', 'target_hostname', 'Score'])
+            logging.info("Loading ChatNoir query size: %s" % querysize)
+            Data = pandas.read_csv(save_path)
+
+            missing = [x for x in querys if x not in Data['Topic'].tolist()]
+            if len(missing) > 0:
+                logging.info("Requesting missing inquiries...")
+
         else:
-            print("[INFO] Query Size not cached requesting ...")
+            missing = querys
+            logging.info("Query Size not cached requesting ...")
+            Data = pandas.DataFrame()
+
+        # if a query is still missing request it and save the new DataFrame
+        if len(missing) > 0:
             answers = []
-            topicID = 1
-            for query in querys:
-                print("[INFO] Getting response for '%s'" % query)
+
+            for query in tqdm(missing, desc="ChatNoir query progress"):
+                logging.debug("Getting response for '%s'" % query)
                 response = self.api(query, querysize)
-                # print(response)
+                logging.debug(response)
                 for answer in response:
-                    buffer = topicID, answer['trec_id'], answer['uuid'], answer['target_hostname'], answer['score']
+                    buffer = query, answer['trec_id'], answer['uuid'], answer['target_hostname'], answer['score']
                     answers.append(buffer)
 
-            topicID += 1
-            Data = (pandas.DataFrame(answers, columns=['TopicID', 'TrecID', 'UUID', 'target_hostname', 'Score']))
+            answer = pandas.DataFrame(answers, columns=['Topic', 'TrecID', 'UUID', 'target_hostname', 'Score'])
+            Data = Data.append(answer)
 
             Path.mkdir(save_path.parent, parents=True, exist_ok=True)
-            Data.to_csv(path_or_buf=save_path)
+            Data.to_csv(path_or_buf=save_path, index=False)
+
+        # removing unrequested queries
+        print(Data)
+        Data = Data[Data['Topic'].isin(querys)]
+        print(Data)
+
         return Data
 
 
@@ -119,8 +136,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("Topics", type=str,
                         help="File path to 'topics-task-2.xml'")
+    parser.add_argument("-v", "--loglevel", type=str, default="WARNING",
+                        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        help="Set the shown log events (default: %(default)s)")
 
     args = parser.parse_args()
+    logging.basicConfig(level=args.loglevel)
 
     topics = get_titles(args.Topics)
 
@@ -128,6 +149,8 @@ if __name__ == "__main__":
 
     size = 50
     test = chatnoir.get_response(topics, size)
+
+    print(test)
 
     # assumption about topic id and correct rank | both not validated
 
