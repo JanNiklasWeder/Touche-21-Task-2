@@ -21,8 +21,11 @@ parser.add_argument('size')
 parser.add_argument('lemma')
 parser.add_argument('sw')
 parser.add_argument('syn')
-parser.add_argument('targer_model')
-parser.add_argument('underscore')
+parser.add_argument('targer_model') #classifyWD_dep
+parser.add_argument('underscore') #0.55
+
+#python main_retrieval.py topics-task-2.xml 50 15 False False False classifyWD_dep 0.55
+
 args = parser.parse_args()
 
 assert os.path.exists(args.xml)
