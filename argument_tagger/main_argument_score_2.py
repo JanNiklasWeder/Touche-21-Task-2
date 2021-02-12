@@ -37,7 +37,7 @@ def response_targer_api(doc, targer_model):
             return targer(retries+1, m_url, m_headers,m_payload)
         return response.json()
     '''
-    # Move on with your life! Yay!
+    
     #response = requests.request("POST", url, headers=headers, data=payload)
     #response=targer(0,url, headers, payload)
     def targer():

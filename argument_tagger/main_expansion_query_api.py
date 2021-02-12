@@ -48,8 +48,9 @@ def api(topic, size, arg_value):
             time.sleep(1)
             return chatnoir_req()    
     resp = chatnoir_req()
+    #return resp
     #resp=requests.post(url, data=request_data).json()
-
+    
     if arg_value==False: #not argumentative topic so that doesn not need arguments scores -> relevance score will not be updated
         return resp
     else: #argumentative topic - using argument scores from targer api - score will be updated
@@ -61,10 +62,10 @@ def api(topic, size, arg_value):
         uuids_titles_snippets = [ (results[i]['uuid'],remove_htmlTags(results[i]['title']), remove_htmlTags(results[i]['snippet'])) for i in range(0,len(results))]
         docs= get_texts_title_snippet(uuids_titles_snippets) #only titles and snippets
         #docs= get_texts_title_snippet_plaintext(uuids_titles_snippets) # titles, snippets and plaintext
-        '''
-        check arg_value for target api premise and claims
-        resp['results] = list of documents for a topic -> need "UUID" for argument_score
-        '''
+        
+        #check arg_value for target api premise and claims
+        #resp['results] = list of documents for a topic -> need "UUID" for argument_score
+
         arg_scores_all_uuids={}
         for uuid, doc in docs.items():
             targer_res = main_argument_score_2.response_targer_api(doc, targer_model)
@@ -72,6 +73,7 @@ def api(topic, size, arg_value):
         #print(arg_scores_all_uuids.values())
         resp=add_arg_score_to_response(arg_scores_all_uuids,resp)
         return resp
+    
 def add_arg_score_to_response(avg_scores,resp):
     new_resp=[]
     

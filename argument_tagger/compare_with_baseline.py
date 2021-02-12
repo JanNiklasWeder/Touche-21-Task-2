@@ -60,6 +60,7 @@ def main():
     print(' avg of new aprroach nDCG {:f}'.format(mean(new_nDCGs)))
 
     #display comparison plotting between base and new approach
+    '''
     fig2 = go.Figure(
         data=[
             go.Bar(
@@ -81,7 +82,7 @@ def main():
         )
     )
     fig2.show()
-
+'''
     fig3 = go.Figure(
         data=[
             go.Scatter(

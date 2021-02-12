@@ -42,9 +42,10 @@ def main():
     false: superlative oder other topics
     '''
     str_score=str(underscore).replace('.','')
-    out = open("files/expanded_output_ntopics_"+str(n_topics)+"_"+str(size)+"_"+str(lemma)+"_"+str(sw)+"_"+str(syn)+"_"+str(targer_model)+"_underscore_"+str_score+".run", "w")
+    out = open("files_local/expanded_output_ntopics_"+str(n_topics)+"_"+str(size)+"_"+str(lemma)+"_"+str(sw)+"_"+str(syn)+"_"+str(targer_model)+"_underscore_"+str_score+".run", "w")
     answers = []
     for topic, arg_value in topics:
+        #answers.append(main_expansion_query_api.chatnoir_api(topic, size, arg_value)) 
         answers.append(main_expansion_query_api.api(topic, size, arg_value)) 
         print("Getting response for", topic)
 
@@ -56,9 +57,9 @@ def main():
         #print(topic)
         rank = 1
         for response in topic['results']:
-            buffer = topicId, "Q0", response['trec_id'], rank, response['score'], "JackSparrowVanilla"
+            buffer = topicId, "Q0", response['trec_id'], rank, response['score'], "JackSparrowVanilla"#, response['title'], response['snippet']
             #print(buffer)
-            out.write(" ".join(map(str, buffer)) + "\n")
+            out.write("\t".join(map(str, buffer)) + "\n")
             rank += 1
         topicId += 1
 
