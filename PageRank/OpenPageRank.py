@@ -1,17 +1,22 @@
 #!/usr/bin/python
 import time
+from pathlib import Path
 
 import requests
-import auth.auth
+
+from auth.auth import Auth
+
 
 def OpenPageRank(website):
     url = 'https://openpagerank.com/api/v1.0/getPageRank'
+    auth = Auth(Path("../"))
+    key = auth.get_key("OpenPageRank")
 
     request_data = {
         "domains[]": {website},
     }
     headers = {
-        'API-OPR': auth.auth.get_key('OpenPageRank')
+        'API-OPR': key
     }
 
     output = []
@@ -36,7 +41,6 @@ def OpenPageRank(website):
             break
 
     output = output[0]['page_rank_decimal']
-    #print(output)
     return output
 
 
