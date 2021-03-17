@@ -3,7 +3,7 @@
 from typing import List
 import en_core_web_md
 import string
-from nltk.corpus import wordnet
+#from nltk.corpus import wordnet
 from spacy.lang.en.stop_words import STOP_WORDS
 import random
 import numpy as np
@@ -32,13 +32,13 @@ class QueryExpansion:
     # Query Expansion
     def expansion(self, relation: bool = False, synonyms: bool = False, sensevec: bool=False, embedded: bool=False):
         result = []
-
+        '''
         if relation:
             result = [*result, *self.get_comparation_superlation_nouns_from_original_data()]
 
         if synonyms:
             result = [*result, *self.synonyms()]
-        
+        '''
         if sensevec:
             result = [*result, *self.similarwords_sensevec()] #each topic there are multi expanded queries by similar words because of replacing methods
 
@@ -70,7 +70,9 @@ class QueryExpansion:
                     if token.lemma_ not in STOP_WORDS or token.text not in STOP_WORDS:
                         try:
                             word=token.lemma_
+                            print(word)
                             ms = self.nlp.vocab.vectors.most_similar(np.asarray([self.nlp.vocab.vectors[self.nlp.vocab.strings[word]]]), self.top_similar)
+                            print(ms)
                             similar_embedding = [self.nlp.vocab.strings[w] for w in ms[0][0]] #get only text from most_similar
                             
                             #checking again if similar words are the same word
@@ -86,7 +88,7 @@ class QueryExpansion:
             expanded_queries = self.similarwords_replace(query, similar_words)
             result.append(expanded_queries)
         return result
-
+        
     def similarwords_sensevec(self):
         result=[]
         for query in self.original_query:
@@ -113,7 +115,7 @@ class QueryExpansion:
 
                                     except ValueError as err:
                                         
-                                        query = token._.s2v_other_senses[0] #get random first similar words by entity_tag
+                                        query = token._.s2v_other_senses[0] #get first similar words by entity_tag
                                         for e in self.standalone_s2v.most_similar(query, n=self.top_similar):
                                             word = e[0].split("|")[0].strip() #get only word from (word|tag, proba)
                                             if (word != token.text) and (self.nlp(word)[0].lemma_ != token.lemma_):
@@ -124,69 +126,10 @@ class QueryExpansion:
             result.append(expanded_queries)
         return result
 
-    def synonyms(self):
-        result = []
-
-        for query in self.original_query:
-            new_title = self.remove_punc(query)
-            syn_pro_title = list()
-            temp = new_title
-            new_title = self.nlp(new_title)
-            for token in new_title:
-                syn_token = self.find_syns_word(token)
-                syn_pro_title.extend(
-                    [syn for syn in list(set(syn_token)) if
-                     syn != str(token.text)])  # distinct and remove the same words
-            # print(syn_pro_title)
-            # synonyms_by_titles.writelines(" ".join(list(set(syn_pro_title))) + "\n")
-            # ToDo temp(org) + syns or only syns?
-            result.append(temp + " " + " ".join(list(set(syn_pro_title))))
-        return result
-
     def remove_punc(self, query: str):
         table = str.maketrans(dict.fromkeys(string.punctuation))
         title = query.translate(table)
         return str(title)
-
-    def find_syns_word(self, token: str):
-        syn_token = []
-        if (token.pos_ == "NOUN"):
-            # ToDo automate wordnet install
-            for synset in wordnet.synsets(token.lemma_):
-                for lemma in synset.lemmas()[:self.top_syns]:  # top 5 synonyms
-                    if "_" not in lemma.name():  # not include the words with _ ex: basketball_game
-                        syn_token.append(lemma.name())
-                    else:
-                        for w in lemma.name().split("_"):
-                            if w not in STOP_WORDS:
-                                syn_token.append(
-                                    w)  # add words with _ to two words ex. laptop_computer -> laptop and computer
-        syn_token = [w for w in syn_token if w != " " and len(w) != 0]
-
-        # ToDo remove random influence
-        if len(syn_token) > 5:
-            return random.sample(syn_token,k=5)  # after top 5 synonyms + splited words -> long titles -> reducing the syns random with 5
-        else:
-            return syn_token
-
-    def get_comparation_superlation_nouns_from_original_data(self):
-        result =[]
-
-        for query in self.original_query:
-            nouns_as_string = []
-            doc = self.nlp(query)
-            annotations = ['CC', 'CD',
-                           'JJ', 'JJR', 'JJS',
-                           'RB', 'RBR', 'RBS',
-                           'NN', 'NNS', 'NNP', 'NNPS',
-                           'VB']
-            for token in doc:
-                if token.tag_ in annotations:
-                    nouns_as_string.append(token.text)
-            result.append(' '.join(nouns_as_string))
-        return result
-
-    # ToDo Merge
 
 
 if __name__ == "__main__":
@@ -205,14 +148,6 @@ if __name__ == "__main__":
     for i in expansion.expansion():
         print(i)
 
-    print("Relation:")
-    for i in expansion.expansion(relation=True):
-        print(i)
-
-    print("Synonyms:")
-    for i in expansion.expansion(synonyms=True):
-        print(i)
-
     print("sensevec")
     for i in expansion.expansion(sensevec=True):
         print(i)
@@ -221,6 +156,6 @@ if __name__ == "__main__":
     for i in expansion.expansion(embedded=True):
         print(i)
 
-    print("all:")
-    for i in expansion.expansion(True, True, True, True):
+    print("Both:")
+    for i in expansion.expansion(sensevec=True, embedded=True):
         print(i)
