@@ -17,7 +17,8 @@ class ArgumentScore:
 
     def __init__(self, needArgument: bool, doc: str, targer_model_name: str, underscore: float):
         #needArgument describes argumentative topic
-        seft.doc = doc
+        
+        self.doc = doc
         self.needArgument = needArgument
         self.targer_model = targer_model_name
 
