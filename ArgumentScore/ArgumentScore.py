@@ -60,6 +60,9 @@ class ArgumentScore:
 
     def response_targer_api(self):
         
+        clean = re.compile('<.*?>')
+        self.doc = re.sub(clean, '', self.doc)
+        print(self.doc)
         payload=self.doc #doc already removed all special characters
         url = "https://demo.webis.de/targer-api/"+self.targer_model
         headers = {
@@ -79,5 +82,10 @@ class ArgumentScore:
         return response
 
 if __name__ == "__main__":
+    
+    underscore=0.0
+    needArgumentScore=True
+    doc = "i think laptop is more useful then desktop <p>"
+    targer_model_name = "classifyWD"
 
-    print(ArgumentScore(True, "i think laptop is more useful then desktop","classifyWD",0.0).get_argument_score())
+    print(ArgumentScore(needArgumentScore, doc, targer_model_name, underscore).get_argument_score())
