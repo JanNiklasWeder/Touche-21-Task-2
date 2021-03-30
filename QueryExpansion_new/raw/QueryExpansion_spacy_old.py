@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from typing import List
-import en_core_web_md
+import en_core_web_sm
 import string
 #from nltk.corpus import wordnet
 from spacy.lang.en.stop_words import STOP_WORDS
@@ -18,7 +18,7 @@ class QueryExpansion:
 
     def __init__(self, query: List[str], top_syns: int = 5, top_similar: int=2):
         self.original_query = query
-        self.nlp = en_core_web_md.load()
+        self.nlp = en_core_web_sm.load()
         self.top_syns = top_syns
 
         self.sense = self.nlp.add_pipe("sense2vec").from_disk("s2v_reddit_2015_md/s2v_old")
@@ -52,9 +52,10 @@ class QueryExpansion:
         import copy
         expanded_queries=[]
         for word, similar_words in similar_words.items():
-            for similar_word in similar_words:
-                new_query=copy.deepcopy(query).replace(word, similar_word)
-                expanded_queries.append(new_query)
+            
+                for similar_word in similar_words:
+                    new_query=copy.deepcopy(query).replace(word, similar_word)
+                    expanded_queries.append(new_query)
         return expanded_queries
 
     def similarwords_wordembedding(self):
