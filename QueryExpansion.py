@@ -14,11 +14,16 @@ from sense2vec import Sense2Vec #for standalone
 
 #global tags
 
+#!/usr/bin/python
+
+
+#global tags
+
 class QueryExpansion:
 
     def __init__(self, query: List[str], top_syns: int = 5, top_similar: int=2):
         self.original_query = query
-        self.nlp = en_core_web_md.load()
+        self.nlp = spacy.load("en_core_web_md")
         self.top_syns = top_syns
 
         self.sense = self.nlp.add_pipe("sense2vec").from_disk("s2v_reddit_2015_md/s2v_old")
@@ -32,7 +37,7 @@ class QueryExpansion:
     # Query Expansion
     def expansion(self, relation: bool = False, synonyms: bool = False, sensevec: bool=False, embedded: bool=False):
         result = []
-
+        
         if relation:
             result = [*result, *self.get_comparation_superlation_nouns_from_original_data()]
 
@@ -70,7 +75,9 @@ class QueryExpansion:
                     if token.lemma_ not in STOP_WORDS or token.text not in STOP_WORDS:
                         try:
                             word=token.lemma_
-                            ms = self.nlp.vocab.vectors.most_similar(np.asarray([self.nlp.vocab.vectors[self.nlp.vocab.strings[word]]]), self.top_similar)
+                            #print(word)
+                            ms = self.nlp.vocab.vectors.most_similar(np.asarray([self.nlp.vocab.vectors[self.nlp.vocab.strings[word]]]), n=self.top_similar)
+                            #print(ms)
                             similar_embedding = [self.nlp.vocab.strings[w] for w in ms[0][0]] #get only text from most_similar
                             
                             #checking again if similar words are the same word
@@ -86,7 +93,7 @@ class QueryExpansion:
             expanded_queries = self.similarwords_replace(query, similar_words)
             result.append(expanded_queries)
         return result
-
+        
     def similarwords_sensevec(self):
         result=[]
         for query in self.original_query:
@@ -113,7 +120,7 @@ class QueryExpansion:
 
                                     except ValueError as err:
                                         
-                                        query = token._.s2v_other_senses[0] #get random first similar words by entity_tag
+                                        query = token._.s2v_other_senses[0] #get first similar words by entity_tag
                                         for e in self.standalone_s2v.most_similar(query, n=self.top_similar):
                                             word = e[0].split("|")[0].strip() #get only word from (word|tag, proba)
                                             if (word != token.text) and (self.nlp(word)[0].lemma_ != token.lemma_):
@@ -123,6 +130,11 @@ class QueryExpansion:
             expanded_queries=self.similarwords_replace(query, similar_words)
             result.append(expanded_queries)
         return result
+
+    def remove_punc(self, query: str):
+        table = str.maketrans(dict.fromkeys(string.punctuation))
+        title = query.translate(table)
+        return str(title)
 
     def synonyms(self):
         result = []
@@ -142,11 +154,6 @@ class QueryExpansion:
             # ToDo temp(org) + syns or only syns?
             result.append(temp + " " + " ".join(list(set(syn_pro_title))))
         return result
-
-    def remove_punc(self, query: str):
-        table = str.maketrans(dict.fromkeys(string.punctuation))
-        title = query.translate(table)
-        return str(title)
 
     def find_syns_word(self, token: str):
         syn_token = []
@@ -186,9 +193,6 @@ class QueryExpansion:
             result.append(' '.join(nouns_as_string))
         return result
 
-    # ToDo Merge
-
-
 if __name__ == "__main__":
     query = ["What is the difference between sex and love?",
              "What is the difference between sex and love?",
@@ -204,7 +208,7 @@ if __name__ == "__main__":
     print("None:")
     for i in expansion.expansion():
         print(i)
-
+    
     print("Relation:")
     for i in expansion.expansion(relation=True):
         print(i)
@@ -221,6 +225,6 @@ if __name__ == "__main__":
     for i in expansion.expansion(embedded=True):
         print(i)
 
-    print("all:")
-    for i in expansion.expansion(True, True, True, True):
+    print("Both:")
+    for i in expansion.expansion(sensevec=True, embedded=True):
         print(i)
