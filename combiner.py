@@ -8,7 +8,6 @@ from PreProcessing.PreProcessing import PreProcessing
 from QueryExpansion.QueryExpansion import QueryExpansion
 from auth.auth import Auth
 
-
 class Combine:
 
     def __init__(self, topics_xml: str, workingDirectory: Path):
