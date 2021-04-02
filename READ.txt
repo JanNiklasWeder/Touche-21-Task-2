@@ -1,0 +1,5 @@
+1. checking if version 2015 or version 2019 for sent2vec 
+2. checking file_name for topics
+3. checking all import global variables
+4. checking input for bool if string or actually bool
+5. checking generated texts file, if script for generating texts in folder

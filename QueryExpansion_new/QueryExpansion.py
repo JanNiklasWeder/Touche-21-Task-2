@@ -35,8 +35,11 @@ class QueryExpansion:
         self.top_similar = top_similar
 
     # Query Expansion
-    def expansion(self, relation: bool = False, synonyms: bool = False, sensevec: bool=False, embedded: bool=False):
+    def expansion(self, original: bool = False, relation: bool = False, synonyms: bool = False, sensevec: bool=False, embedded: bool=False):
         result = []
+
+        if original:
+            result = [*result, *self.get_original()]
         
         if relation:
             result = [*result, *self.get_comparation_superlation_nouns_from_original_data()]
@@ -51,6 +54,10 @@ class QueryExpansion:
             result = [*result, *self.similarwords_wordembedding()]
 
         # ToDo combine original or return only new ones
+        return result
+
+    def get_original(self):
+        result = self.original_query
         return result
 
     def similarwords_replace(self, query, similar_words):
@@ -209,6 +216,11 @@ if __name__ == "__main__":
     for i in expansion.expansion():
         print(i)
     
+    print("original")
+    
+    for i in expansion.expansion(original=True):
+        print(i)
+
     print("Relation:")
     for i in expansion.expansion(relation=True):
         print(i)

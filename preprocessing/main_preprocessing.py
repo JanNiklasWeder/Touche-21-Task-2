@@ -1,6 +1,6 @@
 import spacy
-import en_core_web_sm
-nlp = en_core_web_sm.load()
+import en_core_web_md
+nlp = en_core_web_md.load()
 import random
 from spacy.lang.en.stop_words import STOP_WORDS
 import string
@@ -28,8 +28,6 @@ def get_comparation_superlation_nouns_from_original_data(data):
             nouns_as_string.append(token.text)
     return ' '.join(nouns_as_string)
 
-def synFastText(data):
-    return data
 def prepro(title, lemma, stopword, syn):
     if lemma=="True":
         doc = nlp(title)

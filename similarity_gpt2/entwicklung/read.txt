@@ -1,0 +1,3 @@
+1. laden bereits generierte Texte aus dem Ordner:
+2. laden transform model
+3. nach dem Response vom Chatnoir: similar berechnen
