@@ -7,8 +7,7 @@ import pandas
 class Auth:
 
     def __init__(self, working_directory: Path):
-        self.wD = Path(working_directory / "auth")
-        self.keyFile = pandas.read_csv(self.wD / "keys.csv")
+        self.keyFile = pandas.read_csv(working_directory / "data/keys.csv")
 
     def get_key(self, name):
         buffer = self.keyFile.loc[self.keyFile['Names'] == name]

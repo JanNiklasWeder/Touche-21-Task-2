@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
 import logging
+
+import pandas
 import spacy
 from spacy.lang.en.stop_words import STOP_WORDS
 from typing import List, Union
@@ -8,11 +10,7 @@ from typing import List, Union
 
 class PreProcessing:
 
-    def __init__(self, query: str):
-        self.querys = [query]
-        self.nlp = spacy.load("en_core_web_sm")
-
-    def __init__(self, query: List[Union[str, str]]):
+    def __init__(self, query: pandas.DataFrame):
         self.querys = query
         self.nlp = spacy.load("en_core_web_sm")
 
@@ -20,21 +18,21 @@ class PreProcessing:
     def lemma(self) -> None:
         result = []
 
-        for query in self.querys:
-            buffer = self.nlp(query)
+        for index, row in self.querys.iterrows():
+            buffer = self.nlp(row['query'])
             buffer = " ".join([str(token.lemma_) for token in buffer])
-            result.append(buffer)
+            result.append([row['topic'],buffer])
 
-        self.querys = result
+        self.querys = pandas.concat([pandas.DataFrame(result, columns=['topic', 'query']),self.querys])
 
     def stopword(self) -> None:
         result = []
 
-        for query in self.querys:
-            title = [w for w in query.split(" ") if w not in STOP_WORDS]
-            result.append(" ".join(title))
+        for index, row in self.querys.iterrows():
+            title = [w for w in row['query'].split(" ") if w not in STOP_WORDS]
+            result.append([row['topic']," ".join(title)])
 
-        self.querys = result
+        self.querys = pandas.concat([ pandas.DataFrame(result, columns=['topic', 'query']),self.querys ])
 
     def getQuery(self):
         return self.querys

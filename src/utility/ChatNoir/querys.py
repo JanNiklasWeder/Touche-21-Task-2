@@ -11,7 +11,6 @@ import argparse
 
 from tqdm import tqdm
 
-from auth.auth import Auth
 
 
 def get_titles(file: Path) -> List[str]:
@@ -25,21 +24,11 @@ def get_titles(file: Path) -> List[str]:
 
 
 class ChatNoir:
-    def __init__(self, key: str, corpus: List[str], working_directory: Path):
+
+    def __init__(self, key: str, working_directory: Path, corpus: List[str] = ["cw12"]):
         self.key = key
         self.corpus = corpus
-        self.workingDir = working_directory / "ChatNoir"
-
-    def __init__(self, key: str, corpus: str, working_directory: Path):
-        self.key = key
-        self.corpus = list()
-        self.corpus.append(corpus)
-        self.workingDir = working_directory / "ChatNoir"
-
-    def __init__(self, key: str, working_directory: Path):
-        self.key = key
-        self.corpus = ["cw12"]
-        self.workingDir = working_directory / "ChatNoir"
+        self.workingDir = working_directory / "data/ChatNoirCache"
 
     def api(self, data: str, size: int) -> dict:
         url = 'https://www.chatnoir.eu/api/v1/_search'
@@ -80,23 +69,25 @@ class ChatNoir:
 
         return output
 
-    def get_response(self, querys: List[str], querysize: str) -> pandas.DataFrame:
+    def get_response(self, data: pandas.DataFrame, querysize: str) -> pandas.DataFrame:
+        querys = data['query'].tolist()
+
         querysize = str(querysize)
 
         # Loading Data for querysize if available
-        save_path = self.workingDir / 'res' / (querysize + ".csv")
+        save_path = self.workingDir / (querysize + ".csv")
         if Path(save_path).is_file():
             logging.info("Loading ChatNoir query size: %s" % querysize)
-            Data = pandas.read_csv(save_path)
+            result = pandas.read_csv(save_path)
 
-            missing = [x for x in querys if x not in Data['Topic'].tolist()]
+            missing = [x for x in querys if x not in result['query'].tolist()]
             if len(missing) > 0:
                 logging.info("Requesting missing inquiries...")
 
         else:
             missing = querys
             logging.info("Query Size not cached requesting ...")
-            Data = pandas.DataFrame()
+            result = pandas.DataFrame()
 
         # if a query is still missing request it and save the new DataFrame
         if len(missing) > 0:
@@ -110,21 +101,26 @@ class ChatNoir:
                     buffer = query, answer['trec_id'], answer['uuid'], answer['target_hostname'], answer['score']
                     answers.append(buffer)
 
-            answer = pandas.DataFrame(answers, columns=['Topic', 'TrecID', 'UUID', 'target_hostname', 'Score'])
-            Data = Data.append(answer)
+            answer = pandas.DataFrame(answers, columns=['query', 'TrecID', 'UUID', 'target_hostname', 'Score_ChatNoir'])
+            result = result.append(answer)
 
             Path.mkdir(save_path.parent, parents=True, exist_ok=True)
-            Data.to_csv(path_or_buf=save_path, index=False)
+            result.to_csv(path_or_buf=save_path, index=False)
 
         # removing unrequested queries
-        print(Data)
-        Data = Data[Data['Topic'].isin(querys)]
-        print(Data)
+        result = result[result['query'].isin(querys)]
+        print(data)
+        print(result)
 
-        return Data
+        data = data.merge(result, how="inner", on="query", index=False)
+        return data
 
 
 if __name__ == "__main__":
+
+    '''
+    not working at the moment
+    '''
     wd = Path(os.getcwd())
     wd = wd.parent
 
@@ -151,18 +147,3 @@ if __name__ == "__main__":
     test = chatnoir.get_response(topics, size)
 
     print(test)
-
-    # assumption about topic id and correct rank | both not validated
-
-    '''
-    topicId = 1
-    for topic in answers:
-        print(topic)
-        rank = 1
-        for response in topic:
-            buffer = topicId, "Q0", response['trec_id'], rank, response['score'], "JackSparrowVanilla"
-            print(buffer)
-            out.write(" ".join(map(str, buffer)) + "\n")
-            rank += 1
-        topicId += 1
-    '''

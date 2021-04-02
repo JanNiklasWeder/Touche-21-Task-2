@@ -3,18 +3,29 @@ import logging
 import os
 from pathlib import Path
 
-from ChatNoir.querys import ChatNoir, get_titles
-from PreProcessing.PreProcessing import PreProcessing
-from QueryExpansion.QueryExpansion import QueryExpansion
-from auth.auth import Auth
+import pandas
+
+from src.preprocessing.query_expansion.QueryExpansion import QueryExpansion
+from src.preprocessing.PreProcessing import PreProcessing
+
+from src.utility.ChatNoir.querys import ChatNoir, get_titles
+from src.utility.auth.auth import Auth
+
 
 class Combine:
 
     def __init__(self, topics_xml: str, workingDirectory: Path):
-        self.topics = get_titles(topics_xml)
+
+        topics = get_titles(topics_xml)
+        df = pandas.DataFrame(list(zip(topics, topics)), columns=['topic', 'query'])
+
+        self.topics = df
         self.wD = Path(workingDirectory)
 
     def preprocess(self, lemma: bool = True, stopword: bool = True):
+
+        # ToDo order is not directly changeable
+        # ToDo split lemma and stopword into single functions
         preproc = PreProcessing(self.topics)
 
         if lemma:
@@ -23,10 +34,10 @@ class Combine:
         if stopword:
             preproc.stopword()
 
-        # ToDo ask if append replace or what else
-        self.topics = [*self.topics, *preproc.getQuery()]
+        buffer = preproc.getQuery()
+        self.topics = buffer
 
-    def query_expansion(self, relation: bool = True, synonyms: bool = True):
+    def query_expansion(self, relation: bool = False, synonyms: bool = False, sensevec: bool=False, embedded: bool=False):
         expansion = QueryExpansion(self.topics)
 
         self.topics = [*self.topics, *expansion.expansion(relation=relation, synonyms=synonyms)]
@@ -44,8 +55,8 @@ class Combine:
         if preprocessing:
             self.preprocess(lemma, stopword)
 
-        if query_expansion:
-            self.query_expansion(relation=relation, synonyms=synonyms)
+        #if query_expansion:
+        #    self.query_expansion(relation=relation, synonyms=synonyms)
 
         # request to chatnoir
         auth = Auth(self.wD)
@@ -59,8 +70,8 @@ class Combine:
             print("Hey")
         '''
 
+        pandas.set_option('display.max_columns', None)
         print(df)
-
 
 
 if __name__ == "__main__":
@@ -82,10 +93,9 @@ if __name__ == "__main__":
                         help="Set the detail of the log events (default: %(default)s)")
     args = parser.parse_args()
 
-    logging.basicConfig(filename="run.log", level=args.loglevel)
+    logging.basicConfig(filename="run.log", level=args.loglevel, filemode='w')
 
     wd = os.getcwd()
 
     combiner = Combine(args.Topics, wd)
     combiner.run(args.Preprocessing, args.QueryExpansion, args.Argumentative, args.Trustworthiness)
-

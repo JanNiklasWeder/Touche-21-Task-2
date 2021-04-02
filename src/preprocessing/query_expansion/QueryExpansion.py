@@ -3,9 +3,12 @@
 from typing import List
 import en_core_web_md
 import string
+
+import spacy
 from nltk.corpus import wordnet
 from spacy.lang.en.stop_words import STOP_WORDS
 import random
+import nltk
 import numpy as np
 
 #packages to find similar words by wordembedding and sense2vec
@@ -22,12 +25,17 @@ from sense2vec import Sense2Vec #for standalone
 class QueryExpansion:
 
     def __init__(self, query: List[str], top_syns: int = 5, top_similar: int=2):
+
+        #ToDo needs to be installed
+        nltk.download('wordnet')
+
+
         self.original_query = query
         self.nlp = spacy.load("en_core_web_md")
         self.top_syns = top_syns
 
-        self.sense = self.nlp.add_pipe("sense2vec").from_disk("s2v_reddit_2015_md/s2v_old")
-        self.standalone_sense = Sense2Vec().from_disk("./s2v_reddit_2015_md/s2v_old") #it is not dubplicated
+        self.sense = self.nlp.add_pipe("sense2vec").from_disk("./src/preprocessing/query_expansion/s2v_reddit_2015_md/s2v_old")
+        self.standalone_sense = Sense2Vec().from_disk("./src/preprocessing/query_expansion/s2v_reddit_2015_md/s2v_old") #it is not dubplicated
         
         self.tags = ['CD','JJ','RB', 'NN', 'NNS','NNP','NNPS', 'VB']
         self.pos_tags = ['PROPN','VERB','NOUN','NUM']
