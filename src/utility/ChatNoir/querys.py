@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import logging
+import pickle
 import time
 import requests
 import xml.etree.ElementTree as ET
@@ -77,11 +78,16 @@ class ChatNoir:
 
         # Loading Data for querysize if available
         save_path = self.workingDir / (querysize + ".csv")
-        if Path(save_path).is_file():
+        save_list = self.workingDir / (querysize + ".pickle")
+
+        if Path(save_list).is_file():
             logging.info("Loading ChatNoir query size: %s" % querysize)
             result = pandas.read_csv(save_path)
 
-            missing = [x for x in querys if x not in result['query'].tolist()]
+            with open(save_list, 'rb') as filehandle:
+                saved = pickle.load(filehandle)
+
+            missing = [x for x in querys if x not in saved]
             if len(missing) > 0:
                 logging.info("Requesting missing inquiries...")
 
@@ -108,12 +114,15 @@ class ChatNoir:
             Path.mkdir(save_path.parent, parents=True, exist_ok=True)
             result.to_csv(path_or_buf=save_path, index=False)
 
+            with open(save_list, 'wb') as filehandle:
+                pickle.dump(querys, filehandle)
+
         # removing unrequested queries
         result = result[result['query'].isin(querys)]
         print(data)
         print(result)
 
-        data = data.merge(result, how="inner", on="query", index=False)
+        data = data.merge(result, how="inner", on="query")
         return data
 
 

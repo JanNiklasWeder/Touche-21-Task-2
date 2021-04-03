@@ -12,6 +12,8 @@ from src.merging.Merge import Merge
 from src.ChatNoir.ChatNoir import ChatNoir
 
 
+from src.scores.PageRank.OpenPageRank import OpenPageRank
+
 from src.utility.ChatNoir.querys import ChatNoir, get_titles
 from src.utility.auth.auth import Auth
 
@@ -75,14 +77,37 @@ class Combine:
         #auth = Auth(self.wD)
         #chatnoir = ChatNoir(auth.get_key("ChatNoir"), self.wD)
 
+<<<<<<< HEAD
         chatnoir = ChatNoir(self.topics, size=100) #topics as dataframe
         chatnoir_df = chatnoir.get_response()
+=======
+        df = chatnoir.get_response(self.topics, 100)
+
+        '''
+        if argumentative:
+            # create argumentative score for every request
+            print("Hey")
+        '''
+        print(df)
+        if trustworthiness:
+            page_rank = OpenPageRank(auth.get_key("OpenPageRank"))
+            df['target_hostname']=df['target_hostname'].str.replace('www\.', '', regex=True)
+            df = page_rank.df_add_score(df)
+>>>>>>> af0bfa2582223991590bfb76e99c378db8e26bad
 
         #MERGING AFTER RESPONSES FOR EACH TOPIC
         merged_df = Merge(topics, chatnoir_df, weights, method=method).merging() #topics is not self.topics
         
         pandas.set_option('display.max_columns', None)
+<<<<<<< HEAD
         print(merged_df)
+=======
+
+        if trustworthiness:
+            while True:
+                break
+        print(df)
+>>>>>>> af0bfa2582223991590bfb76e99c378db8e26bad
 
 
 if __name__ == "__main__":
