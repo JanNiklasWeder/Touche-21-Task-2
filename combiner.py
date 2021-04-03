@@ -8,6 +8,8 @@ import pandas
 from src.preprocessing.query_expansion.QueryExpansion import QueryExpansion
 from src.preprocessing.PreProcessing import PreProcessing
 
+from src.scores.PageRank.OpenPageRank import OpenPageRank
+
 from src.utility.ChatNoir.querys import ChatNoir, get_titles
 from src.utility.auth.auth import Auth
 
@@ -69,8 +71,17 @@ class Combine:
             # create argumentative score for every request
             print("Hey")
         '''
+        print(df)
+        if trustworthiness:
+            page_rank = OpenPageRank(auth.get_key("OpenPageRank"))
+            df['target_hostname']=df['target_hostname'].str.replace('www\.', '', regex=True)
+            df = page_rank.df_add_score(df)
 
         pandas.set_option('display.max_columns', None)
+
+        if trustworthiness:
+            while True:
+                break
         print(df)
 
 
