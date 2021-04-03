@@ -11,8 +11,6 @@ import argparse
 
 from tqdm import tqdm
 
-
-
 def get_titles(file: Path) -> List[str]:
     tree = ET.parse(file)
     root = tree.getroot()
@@ -71,6 +69,9 @@ class ChatNoir:
 
     def get_response(self, data: pandas.DataFrame, querysize: str) -> pandas.DataFrame:
         querys = data['query'].tolist()
+        
+        # RESPONSES MUST BE ASSIGNED WITH TAGS
+        tags = data['tag'].tolist()
 
         querysize = str(querysize)
 

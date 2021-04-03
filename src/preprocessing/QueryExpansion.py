@@ -130,29 +130,31 @@ class QueryExpansion:
         for e in expansion_result:
           if e[0]=='original':
             indices.append((expansion_result.index(e), e[1]))
+        
         topics = []
+        
         for i in range(0,len(indices)-1):
           n = indices[i+1][0] - indices[i][0]
-          #print(n)
+         
           topic = indices[i][1]
-          #print(topic)
+         
           topics.append(n * [topic])
-        #
+
         last_index = indices[-1][0]
         last_topic = indices[-1][1]
         last_n = len(expansion_result[last_index:])
         topics.append(last_n * [last_topic])
-
+        
         #merging
         topics = list(chain.from_iterable(topics))
-        #print("check length")
-        #print(len(topics))
-        #print(len(expansion_result))
+        
         #expansion in dataframe
         df['topic'] = topics
-        df['expansions'] = expansion_result
         df['query'] = [e[1] for e in expansion_result]
         df['tag'] = [e[0] for e in expansion_result]
+
+        #remove row with original queryies
+        #df = df.drop([e[0] for e in indices])
         return df
 
     def similarwords_replace(self, query, similar_words):

@@ -1,15 +1,11 @@
 from collections import Counter
 from itertools import chain
+import pandas as pd
+
+import re
+clean = re.compile('<.*?>')
 
 '''
-input for each topic:
-
-+ topic_id
-+ res:
-    resp[tag] = chatnoir_resp
-    resp[sensevec_1] = chatnoir_resp
-    resp[sensevec_2] = chatnoir_resp
-    ...
 + weights:
     weights['original'] = 
     weights['preprocessing']=
@@ -23,17 +19,75 @@ output:
 '''
 
 class Merge:
+    
+    def __init__(self, topics: [str], resp_df: pd.DataFrame, weights: dict, method: str):
 
-    def __init__(self, topic_id: int, resp: dict, weights: dict, method: str):
-        self.topic_id = topic_id
-        self.res_tags = resp
+        self.resp_df = resp_df
         self.weights = weights
         self.method = method
+        self.original_topics = topics
+       
 
-    def merging_res(self):
+    def merging(self):
+        merged_topics = {}
+        for topic in self.original_topics:
+          splitdf = self.resp_df[self.resp_df['topic']==topic].reset_index(drop=True)
+          res_tags_topic = {}
+          for i in range(0, len(splitdf.index)):
+            tag = splitdf.iloc[i]['tag']
+            res = splitdf.iloc[i]['response']
+            res_tags_topic[tag] = res
+
+          merged_resp = self.merging_resp_topic(res_tags_topic)
+          merged_topics[topic] = merged_resp
+
+        
+        df = self.to_df(merged_topics)
+        return df
+
+    def to_df(self, merged_topics):
+
+        topics_col = []
+        trecids_col = []
+        uuids_col = []
+        titles_col = []
+        snippets_col = []
+        hostnames_col=[]
+        scores_col=[]
+        updatedscores_col = []
+
+
+        for topic, res in merged_topics.items():
+          n = len(res['results'])
+          topics_col.append(n*[topic])
+          for doc in res['results']:
+            trecids_col.append(doc['trec_id'])
+            uuids_col.append(doc['uuid'])
+            titles_col.append(re.sub(clean,'',doc['title']))
+            snippets_col.append(re.sub(clean, '', doc['snippet']))
+            hostnames_col.append(doc['target_hostname'])
+            scores_col.append(doc['score'])
+            updatedscores_col.append(doc['updated_score'])
+
+
+        topics_col = list(chain.from_iterable(topics_col))
+        
+        final_merged_df = pd.DataFrame()
+        final_merged_df['topic'] = topics_col
+        final_merged_df['trec_id'] = trecids_col
+        final_merged_df['uuid'] = uuids_col
+        final_merged_df['title'] = titles_col
+        final_merged_df['snippet'] = snippets_col
+        final_merged_df['target_hostname'] = hostnames_col
+        final_merged_df['score'] = scores_col
+        final_merged_df['updated_score'] = updatedscores_col
+
+        return final_merged_df
+
+    def merging_resp_topic(self, res_tags):
         #resp['results'] = [doc1, doc2, ...]
         updated_resp_tags=[]
-        for tag, resp in self.res_tags.items():
+        for tag, resp in res_tags.items():
             updated_resp = self.update_scores_by_tags(tag, resp['results']) #(tag, updated_resp)
             updated_resp_tags.append(updated_resp)
         
@@ -113,65 +167,3 @@ class Merge:
             merged = sorted(merged, key=lambda doc: doc['score'], reverse=True)
 
         return merged
-if __name__ == "__main__":
-  #INPUT
-  topic_id = 1
-  fake_resp = {
-      'original': {'results':[
-                              {'trec_id':1, 'score':5},
-                              {'trec_id':2,'score':4},
-                              {'trec_id':3, 'score':4}
-                              ]},
-      'preprocessing': {'results':[
-                              {'trec_id':1, 'score':1},
-                              {'trec_id':2, 'score':1},
-                              {'trec_id':5, 'score':1}
-                              ]},
-      'annotation': {'results':[
-                              {'trec_id':4, 'score':3},
-                              {'trec_id':2, 'score':2},
-                              {'trec_id':3, 'score':1}
-                              ]},
-      'syns': {'results':[
-                              {'trec_id':5, 'score':2},
-                              {'trec_id':2, 'score':2},
-                              {'trec_id':4, 'score':1}
-                              ]},
-      'sensevec_1': {'results':[
-                              {'trec_id':1, 'score':3},
-                              {'trec_id':2, 'score':5},
-                              {'trec_id':3, 'score':5}
-                              ]},
-      'sensevec_2': {'results':[
-                              {'trec_id':1, 'score':2},
-                              {'trec_id':6, 'score':1},
-                              {'trec_id':3, 'score':1}
-                              ]},
-      'embedded_1': {'results':[
-                              {'trec_id':7, 'score':2},
-                              {'trec_id':8, 'score':1},
-                              {'trec_id':9, 'score':1}
-                              ]},
-      'embedded_2': {'results':[
-                              {'trec_id':1, 'score':2},
-                              {'trec_id':6, 'score':3.5},
-                              {'trec_id':7, 'score':2}
-                              ]},
-      'embedded_3': {'results':[
-                              {'trec_id':4, 'score':1},
-                              {'trec_id':5, 'score':2},
-                              {'trec_id':6, 'score':3}
-                              ]}
-  }
-  weights = {
-      'original':2,
-      'annotation': 1.75,
-      'sensevec': 1.5,
-      'embedded': 1.5,
-      'syns': 1,
-      'preprocessing': 1
-  }
-  print("Ergebnisse mit Max-Method")
-  print(Merge(topic_id,fake_resp, weights, method='max').merging_res())
-  print("Ergebnisse mit Mean-Method")
-  print(Merge(topic_id,fake_resp, weights, method='mean').merging_res())
