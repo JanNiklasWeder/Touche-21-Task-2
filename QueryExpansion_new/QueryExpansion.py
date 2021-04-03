@@ -1,18 +1,38 @@
-#!/usr/bin/python
+# -*- coding: utf-8 -*-
+'''
+!pip install spacy
 
+from google.colab import drive
+drive.mount('/content/drive')
+
+!unzip -u "/content/drive/MyDrive/Colab_Notebooks/s2v_reddit_2015_md.zip" -d "/content"
+
+!pip install sense2vec
+
+!python -m spacy download en_core_web_md
+
+!pip install nltk
+
+!pip install pandas
+'''
+
+import nltk
+nltk.download('wordnet')
+from nltk.corpus import  wordnet
 from typing import List
-import en_core_web_md
+import spacy
+#en_core_web_md
 import string
 from nltk.corpus import wordnet
 from spacy.lang.en.stop_words import STOP_WORDS
 import random
 import numpy as np
+from itertools import chain
 
 #packages to find similar words by wordembedding and sense2vec
 from sense2vec import Sense2VecComponent 
 from sense2vec import Sense2Vec #for standalone
-
-#global tags
+import pandas as pd
 
 #!/usr/bin/python
 
@@ -35,30 +55,105 @@ class QueryExpansion:
         self.top_similar = top_similar
 
     # Query Expansion
-    def expansion(self, original: bool = False, relation: bool = False, synonyms: bool = False, sensevec: bool=False, embedded: bool=False):
+    def expansion(self, original: bool = True, relation: bool = False, synonyms: bool = False, sensevec: bool=False, embedded: bool=False):
         result = []
-
+        turnOn = 0
         if original:
-            result = [*result, *self.get_original()]
-        
+            original_queries = [('original', query) for query in self.original_query]
+            result = [*result, *original_queries]
+            turnOn = turnOn + 1
+        #print(turnOn)
         if relation:
-            result = [*result, *self.get_comparation_superlation_nouns_from_original_data()]
+            
+            new_queries = self.get_comparation_superlation_nouns_from_original_data()
+            i = turnOn
+            for new_query in new_queries:
+              result.insert(i, ('annotation', new_query))
+              i = i + 1 + turnOn
+            turnOn = turnOn + 1
 
         if synonyms:
-            result = [*result, *self.synonyms()]
+            new_queries = self.synonyms()
+            i = turnOn
+            for new_query in new_queries:
+              result.insert(i, ('syns',new_query))
+              i = i + 1 + turnOn
+            turnOn = turnOn + 1
+            
+            #result = [*result, *self.synonyms()]
         
         if sensevec:
-            result = [*result, *self.similarwords_sensevec()] #each topic there are multi expanded queries by similar words because of replacing methods
+            #result = [*result, *self.similarwords_sensevec()] #each topic there are multi expanded queries by similar words because of replacing methods
+            new_queries = self.similarwords_sensevec()
+            i = turnOn
+            
+            for queries in new_queries:
+              #print(queries)
+              length = len(queries)
+              #print(length)
+              index = 1 #for tag sensevec
+              for query in queries:
+                #print(query)
+                result.insert(i, ('sensevec_'+str(index),query))
+                i = i + 1
+                index = index + 1
+              i = i + turnOn
+              #print(i)
+            turnOn = turnOn + 1
 
         if embedded:
-            result = [*result, *self.similarwords_wordembedding()]
+            #result = [*result, *self.similarwords_wordembedding()]
+            new_queries = self.similarwords_wordembedding()
+            i = turnOn
+            
+            for queries in new_queries:
+              #print(queries)
+              length = len(queries)
+              #print(length)
+              index = 1 #for tag sensevec
+              for query in queries:
+                #print(query)
+                result.insert(i, ('embedded_'+str(index),query))
+                i = i + 1
+                index = index + 1
+              i = i + turnOn
+              #print(i)
+            turnOn = turnOn + 1
 
-        # ToDo combine original or return only new ones
-        return result
+        #cover to dataframe
+        df = self.dfCover(result)
+        return df
+    def dfCover(self, expansion_result):
+        df = pd.DataFrame()
+        indices=[]
+        #make original col
+        for e in expansion_result:
+          if e[0]=='original':
+            indices.append((expansion_result.index(e), e[1]))
+        topics = []
+        for i in range(0,len(indices)-1):
+          n = indices[i+1][0] - indices[i][0]
+          #print(n)
+          topic = indices[i][1]
+          #print(topic)
+          topics.append(n * [topic])
+        #
+        last_index = indices[-1][0]
+        last_topic = indices[-1][1]
+        last_n = len(expansion_result[last_index:])
+        topics.append(last_n * [last_topic])
 
-    def get_original(self):
-        result = self.original_query
-        return result
+        #merging
+        topics = list(chain.from_iterable(topics))
+        #print("check length")
+        #print(len(topics))
+        #print(len(expansion_result))
+        #expansion in dataframe
+        df['topic'] = topics
+        df['expansions'] = expansion_result
+        df['query'] = [e[1] for e in expansion_result]
+        df['tag'] = [e[0] for e in expansion_result]
+        return df
 
     def similarwords_replace(self, query, similar_words):
         import copy
@@ -202,7 +297,7 @@ class QueryExpansion:
 
 if __name__ == "__main__":
     query = ["What is the difference between sex and love?",
-             "What is the difference between sex and love?",
+             "Which is the highest mountain in the world?",
              "Which is better, a laptop or a desktop?"]
 
     print("Org. query:")
@@ -211,32 +306,7 @@ if __name__ == "__main__":
         print(i)
 
     expansion = QueryExpansion(query)
-
-    print("None:")
-    for i in expansion.expansion():
-        print(i)
-    
-    print("original")
-    
-    for i in expansion.expansion(original=True):
-        print(i)
-
-    print("Relation:")
-    for i in expansion.expansion(relation=True):
-        print(i)
-
-    print("Synonyms:")
-    for i in expansion.expansion(synonyms=True):
-        print(i)
-
-    print("sensevec")
-    for i in expansion.expansion(sensevec=True):
-        print(i)
-
-    print("embedded:")
-    for i in expansion.expansion(embedded=True):
-        print(i)
-
-    print("Both:")
-    for i in expansion.expansion(sensevec=True, embedded=True):
-        print(i)
+    print("=====================================================================")
+    print(expansion.expansion(original=True,relation=True, synonyms=False, sensevec=True))
+    print("=====================================================================")
+    print(expansion.expansion(original=True,relation=True, synonyms=True, embedded=True))
