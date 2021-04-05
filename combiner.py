@@ -83,11 +83,11 @@ class Combine:
         #auth = Auth(self.wD)
         #chatnoir = ChatNoir(auth.get_key("ChatNoir"), self.wD)
 
-        chatnoir = ChatNoir(self.topics, size=100) #topics as dataframe
+        chatnoir = ChatNoir(self.topics, size=100) #topics as dataframe topic, query, tag
         chatnoir_df = chatnoir.get_response()
 
         #MERGING AFTER RESPONSES FOR EACH TOPIC
-        merged_df = Merge(topics, chatnoir_df, weights, method=method).merging() #topics is not self.topics
+        merged_df = Merge(topics, chatnoir_df, weights, method=method).merging() #topics is not self.topics, topics is the list of titles
         #ARGUMENT SCORES
         if argumentative:
             #MERGED_DF: must have column "needArgument"
@@ -95,7 +95,7 @@ class Combine:
             merged_df = ArgumentScore(merged_df, targer_model_name, underscore).get_argument_score()
         if similarity_score:
             transform_model_name = "gpt"
-            merged_df = SimilarityScore(topics, merged_df, transform_model_name)
+            merged_df = SimilarityScore(topics, merged_df, transform_model_name) #topics here is the list of orginal titles
 
         pandas.set_option('display.max_columns', None)
         print(merged_df)
