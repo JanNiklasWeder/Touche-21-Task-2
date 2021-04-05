@@ -104,7 +104,7 @@ class SimilarityScore:
         '''
         dict_combined_data={}
         topic_id=0
-        for i in range(0,50):
+        for i in range(0,len(self.topics)):
             topic_id=i+1
             liste = [topics[i]+". "+ e for e in generated_texts[i+1]]
             dict_combined_data[topic_id] = liste
