@@ -14,6 +14,7 @@ from src.ChatNoir.ChatNoir import ChatNoir
 
 from src.scores.PageRank.OpenPageRank import OpenPageRank
 from src.scores.ArgumentScore.ArgumentScore import ArgumentScore
+from src.scores.SimilarityScore.SimilarityScore import SimilarityScore
 
 from src.utility.ChatNoir.querys import ChatNoir, get_titles
 from src.utility.auth.auth import Auth
@@ -65,12 +66,14 @@ class Combine:
     query_expansion: bool = True, 
     weights: dict = {'original':5,  'annotation':4,'sensevec': 3, 'embedded':3,'preprocessing':2,'syns':1}, method: str = 'max', 
     argumentative: bool = True,
-    targer_model_name: str = 'classifyWD',
     underscore: float = 0.55,
-    trustworthiness: bool = True, lemma: bool = True, stopword: bool = True,
+    trustworthiness: bool = True, 
+    lemma: bool = True, 
+    similarity_score: bool= True,
     relation: bool = True, synonyms: bool = True, sensevec: bool=True, embedded: bool=True):
 
-        #if preprocessing:
+        # REMOVE ATTRIBUTE stopwords
+        # if preprocessing:
         #    self.preprocess(lemma, stopword)
 
         if query_expansion:
@@ -87,7 +90,12 @@ class Combine:
         merged_df = Merge(topics, chatnoir_df, weights, method=method).merging() #topics is not self.topics
         #ARGUMENT SCORES
         if argumentative:
+            #MERGED_DF: must have column "needArgument"
+            targer_model_name = "classifyWD"
             merged_df = ArgumentScore(merged_df, targer_model_name, underscore).get_argument_score()
+        if similarity_score:
+            transform_model_name = "gpt"
+            merged_df = SimilarityScore(topics, merged_df, transform_model_name)
 
         pandas.set_option('display.max_columns', None)
         print(merged_df)
@@ -121,8 +129,6 @@ if __name__ == "__main__":
     parser.add_argument("-A", "--Argumentative", type=bool, default=True,
                         help="Activate the argumentative score (default: %(default)s)")
 
-    parser.add_argument("-TARGER", "--targerModell", type=str, default='classifyWD',
-                        help="TARGER Modell for argument score (default: %(default)s)")
 
     parser.add_argument("-U", "--Underscore", type=float, default=0.55,
                         help="Underscore for argument score (default: %(default)s)")                    
@@ -141,5 +147,5 @@ if __name__ == "__main__":
     combiner = Combine(args.Topics, wd)
     combiner.run(args.Preprocessing, 
                 args.QueryExpansion, args.WeightsMerging, args.MergeMethod, 
-                args.Argumentative, args.targerModell, args.Underscore, 
+                args.Argumentative, args.Underscore, 
                 args.Trustworthiness)
