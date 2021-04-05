@@ -115,7 +115,7 @@ class SimilarityScore:
 if __name__ == "__main__":
     
     #READ RESULTS FROM CHATNOIR UND MERGED DF
-    merged_resp = pd.read_csv('/content/merged_results.csv', sep=";")
+    merged_resp = pd.read_csv('merged_results.csv', sep=";")
     print(merged_resp)
 
     print("\n"+"=====================GET ALL TOPICS=================")
