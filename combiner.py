@@ -97,7 +97,6 @@ class Combine:
             for task 2020 only topic 6 and 13 do not need argument score
             '''
             merged_df['needArgument'] = [i not in [6,13] for i in range(1,51)] #return True when not 6,13, False otherwise
-            
             targer_model_name = "classifyWD"
             merged_df = ArgumentScore(merged_df, targer_model_name, underscore).get_argument_score()
         if similarity_score:
