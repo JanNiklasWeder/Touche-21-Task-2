@@ -88,9 +88,16 @@ class Combine:
 
         #MERGING AFTER RESPONSES FOR EACH TOPIC
         merged_df = Merge(topics, chatnoir_df, weights, method=method).merging() #topics is not self.topics, topics is the list of titles
+       
         #ARGUMENT SCORES
         if argumentative:
             #MERGED_DF: must have column "needArgument"
+            #needArgument must be added manually.
+            '''
+            for task 2020 only topic 6 and 13 do not need argument score
+            '''
+            merged_df['needArgument'] = [i not in [6,13] for i in range(1,51)] #return True when not 6,13, False otherwise
+            
             targer_model_name = "classifyWD"
             merged_df = ArgumentScore(merged_df, targer_model_name, underscore).get_argument_score()
         if similarity_score:
