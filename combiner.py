@@ -48,7 +48,7 @@ class Combine:
         self.topics = buffer
 
     def query_expansion(self, relation: bool = False, synonyms: bool = False, sensevec: bool=False, embedded: bool=False):
-        expansion = QueryExpansion(list(self.topics['topics']))
+        expansion = QueryExpansion(list(self.topics['topic'].unique()))
         print(relation)
 
         self.topics = [*self.topics, *expansion.expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded)]
