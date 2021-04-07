@@ -48,7 +48,8 @@ class Combine:
         self.topics = buffer
 
     def query_expansion(self, relation: bool = False, synonyms: bool = False, sensevec: bool=False, embedded: bool=False):
-        expansion = QueryExpansion(self.topics)
+        expansion = QueryExpansion(list(self.topics['topics']))
+        print(relation)
 
         self.topics = [*self.topics, *expansion.expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded)]
 
@@ -87,7 +88,7 @@ class Combine:
         chatnoir_df = chatnoir.get_response()
 
         #MERGING AFTER RESPONSES FOR EACH TOPIC
-        merged_df = Merge(topics, chatnoir_df, weights, method=method).merging() #topics is not self.topics, topics is the list of titles
+        merged_df = Merge(list(self.topics['topic'].unique()), chatnoir_df, weights, method=method).merging() #topics is not self.topics, topics is the list of titles
        
         #ARGUMENT SCORES
         if argumentative:
