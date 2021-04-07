@@ -51,7 +51,7 @@ class Combine:
         expansion = QueryExpansion(list(self.topics['topic'].unique()))
         print(relation)
 
-        self.topics = [*self.topics, *expansion.expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded)]
+        self.topics = expansion.expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded) #[*self.topics, *expansion.expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded)]
 
     def argumentative(self):
         #must define which topic need argumentative score
