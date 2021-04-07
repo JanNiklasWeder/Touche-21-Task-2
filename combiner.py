@@ -25,7 +25,7 @@ class Combine:
     def __init__(self, topics_xml: str, workingDirectory: Path):
 
         topics = get_titles(topics_xml)
-        df = pandas.DataFrame(list(zip(topics, topics)), columns=['topic', 'query', 'tag'])
+        df = pandas.DataFrame(list(zip(topics, topics, len(topics)*['original'])), columns=['topic', 'query', 'tag'])
 
         self.topics = df
         self.wD = Path(workingDirectory)
