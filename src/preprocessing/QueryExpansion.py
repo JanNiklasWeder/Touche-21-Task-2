@@ -46,8 +46,12 @@ class QueryExpansion:
         self.nlp = spacy.load("en_core_web_md")
         self.top_syns = top_syns
 
-        self.sense = self.nlp.add_pipe("sense2vec").from_disk("s2v_reddit_2015_md/s2v_old")
-        self.standalone_sense = Sense2Vec().from_disk("./s2v_reddit_2015_md/s2v_old") #it is not dubplicated
+        from pathlib import Path
+        path = Path(__file__).parent.joinpath('s2v_reddit_2015_md/s2v_old')
+        print(path)
+
+        self.sense = self.nlp.add_pipe("sense2vec").from_disk(path)
+        self.standalone_s2v = Sense2Vec().from_disk(path) #it is not dubplicated
         
         self.tags = ['CD','JJ','RB', 'NN', 'NNS','NNP','NNPS', 'VB']
         self.pos_tags = ['PROPN','VERB','NOUN','NUM']
