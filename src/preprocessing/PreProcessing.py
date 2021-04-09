@@ -21,9 +21,9 @@ class PreProcessing:
         for index, row in self.querys.iterrows():
             buffer = self.nlp(row['query'])
             buffer = " ".join([str(token.lemma_) for token in buffer])
-            result.append([row['topic'],buffer])
+            result.append([row['topic'],buffer,'preprocessing'])
 
-        self.querys = pandas.concat([pandas.DataFrame(result, columns=['topic', 'query']),self.querys])
+        self.querys = pandas.concat([self.querys, pandas.DataFrame(result, columns=['topic', 'query', 'tag'])])
 
     def stopword(self) -> None:
         result = []
