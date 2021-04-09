@@ -16,7 +16,7 @@ from src.scores.PageRank.OpenPageRank import OpenPageRank
 from src.scores.ArgumentScore.ArgumentScore import ArgumentScore
 from src.scores.SimilarityScore.SimilarityScore import SimilarityScore
 
-from src.utility.ChatNoir.querys import ChatNoir, get_titles
+#from src.utility.ChatNoir.querys import ChatNoir, get_titles
 from src.utility.auth.auth import Auth
 
 
