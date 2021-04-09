@@ -18,7 +18,7 @@ from itertools import chain
 class ChatNoir:
     
 
-    def __init__(self, queries: pd.DataFrame, size ):
+    def __init__(self, queries: pd.DataFrame, size: int=5):
         self.url = 'https://www.chatnoir.eu/api/v1/_search'
         self.all_queries = queries
         self.size = size
