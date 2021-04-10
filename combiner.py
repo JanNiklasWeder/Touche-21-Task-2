@@ -55,8 +55,8 @@ class Combine:
         #add expansion_df to self.topics
 
         self.topics = pandas.concat([self.topics, expansion_df])
-        self.topics = self.topics.sort_values(by=['topic'])
-        self.topics = self.topics.reset_index(drop=True)
+        #self.topics = self.topics.sort_values(by=['topic'])
+        #self.topics = self.topics.reset_index(drop=True)
 
     def argumentative(self):
         #must define which topic need argumentative score
