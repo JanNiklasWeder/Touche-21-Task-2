@@ -53,16 +53,10 @@ class Combine:
         expansion_df = expansion.expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded) #[*self.topics, *expansion.expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded)]
         expansion_df = expansion_df[expansion_df['tag']!='original'] #delete row original from expansion
         #add expansion_df to self.topics
-        for tag in list(expansion_df['tag'].unique()):
-            tag_df = expansion_df[expansion_df['tag']==tag].reset_index(drop=True)
-            
-            result = []
-            for index, row in tag_df.iterrows():
-              result.append([row['topic'], row['query'], row['tag']])
 
-            self.topics = pandas.concat([self.topics,pandas.DataFrame(result, columns=['topic','query','tag'])])
-            self.topics = self.topics.sort_index()
-        self.topics = self.topics.reset_index()
+        self.topics = pandas.concat([self.topics, expansion])
+        self.topics = self.topics.sort_values(by=['topic'])
+        self.topicsf = self.topics.reset_index(drop=True)
 
     def argumentative(self):
         #must define which topic need argumentative score
