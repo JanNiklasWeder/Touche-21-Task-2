@@ -74,8 +74,10 @@ class QueryExpansion:
 
     def similarwords_sensevec(self):
         result=[]
-        for query in list(self.df_queries['topic'].unique()):
-            doc = self.nlp(query)
+        #print(list(self.df_queries['topic'].unique()))
+        for original_query in list(self.df_queries['topic'].unique()):
+            
+            doc = self.nlp(original_query)
             expanded_queries=[]
             similar_words={}
             for token in doc:
@@ -105,13 +107,11 @@ class QueryExpansion:
                                                 top_similar_words.append(word)
                         
                         similar_words[token.text]=list(set(top_similar_words))
-            expanded_queries=self.similarwords_replace(query, similar_words)
-            
+            expanded_queries=self.similarwords_replace(original_query, similar_words)
             i = 1
             for new_query in expanded_queries:
-              result.append([query,new_query, 'sensevec_'+str(i)])
+              result.append([original_query,new_query, 'sensevec_'+str(i)])
               i = i +1
-            #result.append(expanded_queries)
         return result
 
     def remove_punc(self, query: str):
