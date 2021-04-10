@@ -54,7 +54,7 @@ class Combine:
         expansion_df = expansion_df[expansion_df['tag']!='original'] #delete row original from expansion
         #add expansion_df to self.topics
 
-        self.topics = pandas.concat([self.topics, expansion])
+        self.topics = pandas.concat([self.topics, expansion_df])
         self.topics = self.topics.sort_values(by=['topic'])
         self.topics = self.topics.reset_index(drop=True)
 
