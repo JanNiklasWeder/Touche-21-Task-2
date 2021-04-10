@@ -47,17 +47,12 @@ class Combine:
         buffer = preproc.getQuery()
         self.topics = buffer
         self.topics = self.topics.sort_index()
+        self.topics = self.topics.reset_index(drop=True)
 
     def query_expansion(self, relation: bool = False, synonyms: bool = False, sensevec: bool=False, embedded: bool=False):
-        expansion = QueryExpansion(list(self.topics['topic'].unique()))
-        expansion_df = expansion.expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded) #[*self.topics, *expansion.expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded)]
-        expansion_df = expansion_df[expansion_df['tag']!='original'] #delete row original from expansion
-        #add expansion_df to self.topics
-
-        self.topics = pandas.concat([self.topics, expansion_df])
-        #self.topics = self.topics.sort_values(by=['topic'])
-        #self.topics = self.topics.reset_index(drop=True)
-
+        expansion = QueryExpansion(self.topics)
+        self.topics = expansion.expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded) 
+        
     def argumentative(self):
         #must define which topic need argumentative score
         print("Hey")
