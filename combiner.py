@@ -30,7 +30,7 @@ class Combine:
         self.topics = df
         self.wD = Path(workingDirectory)
 
-    def preprocess(self, lemma: bool = True, stopword: bool = True):
+    def preprocess(self, lemma: bool = True, stopword: bool = False):
 
         # ToDo order is not directly changeable
         # ToDo split lemma and stopword into single functions
@@ -52,15 +52,10 @@ class Combine:
     def query_expansion(self, relation: bool = False, synonyms: bool = False, sensevec: bool=False, embedded: bool=False):
         expansion = QueryExpansion(self.topics)
         self.topics = expansion.expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded) 
-        
-    def argumentative(self):
-        #must define which topic need argumentative score
-        print("Hey")
-
+    
     def trusworthiness(self):
         print("Hey")
-    def merging_responses(self,df_resp):
-        return 0
+    
 
     def run(self, 
     preprocessing: bool = True, 
@@ -74,8 +69,9 @@ class Combine:
     relation: bool = True, synonyms: bool = True, sensevec: bool=True, embedded: bool=True):
 
         # REMOVE ATTRIBUTE stopwords
-        # if preprocessing:
-        #    self.preprocess(lemma, stopword)
+        if preprocessing:
+            stopword=False
+            self.preprocess(lemma, stopword)
 
         if query_expansion:
             self.query_expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded)
