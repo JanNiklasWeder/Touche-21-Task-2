@@ -11,12 +11,11 @@ from src.merging.Merge import Merge
 
 from src.ChatNoir.ChatNoir import ChatNoir
 
-
 from src.scores.PageRank.OpenPageRank import OpenPageRank
 from src.scores.ArgumentScore.ArgumentScore import ArgumentScore
 from src.scores.SimilarityScore.SimilarityScore import SimilarityScore
 
-#from src.utility.ChatNoir.querys import ChatNoir, get_titles
+from src.utility.ChatNoir.querys import get_titles
 from src.utility.auth.auth import Auth
 
 
@@ -29,8 +28,8 @@ class Combine:
 
         self.topics = df
         self.wD = Path(workingDirectory)
-
-    def preprocess(self, lemma: bool = True, stopword: bool = False):
+        
+    def preprocess(self, lemma: bool = True):
 
         # ToDo order is not directly changeable
         # ToDo split lemma and stopword into single functions
@@ -40,10 +39,7 @@ class Combine:
 
         if lemma:
             preproc.lemma()
-        #We do not use stopword more
-        if stopword:
-            preproc.stopword()
-
+        
         buffer = preproc.getQuery()
         self.topics = buffer
         self.topics = self.topics.sort_index()
@@ -60,7 +56,7 @@ class Combine:
     def run(self, 
     preprocessing: bool = True, 
     query_expansion: bool = True, 
-    weights: dict = {'original':5,  'annotation':4,'sensevec': 3, 'embedded':3,'preprocessing':2,'syns':1}, method: str = 'max', 
+    weights: dict = {'original':3,  'annotation':2.5,'sensevec': 2, 'embedded':2,'preprocessing':1.5,'syns':1}, method: str = 'max', 
     argumentative: bool = True,
     underscore: float = 0.55,
     trustworthiness: bool = True, 
@@ -68,10 +64,8 @@ class Combine:
     similarity_score: bool= True,
     relation: bool = True, synonyms: bool = True, sensevec: bool=True, embedded: bool=True):
 
-        # REMOVE ATTRIBUTE stopwords
         if preprocessing:
-            stopword=False
-            self.preprocess(lemma, stopword)
+            self.preprocess(lemma) #remove stopword
 
         if query_expansion:
             self.query_expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded)
@@ -82,14 +76,11 @@ class Combine:
 
         chatnoir = ChatNoir(self.topics, size=100) #topics as dataframe topic, query, tag
         chatnoir_df = chatnoir.get_response()
-
-        #MERGING AFTER RESPONSES FOR EACH TOPIC
+        #merging
         merged_df = Merge(list(self.topics['topic'].unique()), chatnoir_df, weights, method=method).merging() #topics is not self.topics, topics is the list of titles
        
         #ARGUMENT SCORES
         if argumentative:
-            #MERGED_DF: must have column "needArgument"
-            #needArgument must be added manually.
             '''
             for task 2020 only topic 6 and 13 do not need argument score
             '''
@@ -98,13 +89,11 @@ class Combine:
             merged_df = ArgumentScore(merged_df, targer_model_name, underscore).get_argument_score()
         if similarity_score:
             transform_model_name = "gpt"
-            merged_df = SimilarityScore(self.topics['topic'].unique()), merged_df, transform_model_name) #topics here is the list of orginal titles
-
-        pandas.set_option('display.max_columns', None)
+            merged_df = SimilarityScore(self.topics['topic'].unique(), merged_df, transform_model_name)
         print(merged_df)
 
-
 if __name__ == "__main__":
+
     import argparse
 
     parser = argparse.ArgumentParser()

@@ -17,7 +17,7 @@ from simpletransformers.language_representation import RepresentationModel
 from scipy.spatial import distance
 
 class SimilarityScore:
-    def __init__(self, all_topics: [str], data: pd.DataFrame, transform_model_name: str =='gpt'):
+    def __init__(self, all_topics: [str], data: pd.DataFrame, transform_model_name: str='gpt'):
       
         self.data = data
         self.n_samples = 5

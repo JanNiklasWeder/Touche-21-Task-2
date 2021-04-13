@@ -1,7 +1,0 @@
-1. Checking KeyError. It works with model en_core_web_md
-2. Checking one Class QueryExpansion:
-    + result= list of string for simple expansion
-    + result= list of (list of string) for spacy-expansion
-3. Checking
-    + Class QueryExpansion
-    + Class QueryExpansion_spacy
