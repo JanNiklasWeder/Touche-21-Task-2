@@ -89,7 +89,7 @@ class Combine:
             merged_df = ArgumentScore(merged_df, targer_model_name, underscore).get_argument_score()
         if similarity_score:
             transform_model_name = "gpt"
-            merged_df = SimilarityScore(self.topics['topic'].unique(), merged_df, transform_model_name)
+            merged_df = SimilarityScore(list(self.topics['topic'].unique()), merged_df, transform_model_name)
         print(merged_df)
 
 if __name__ == "__main__":
