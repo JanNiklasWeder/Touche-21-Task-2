@@ -71,7 +71,6 @@ class QueryExpansion:
                 new_query=copy.deepcopy(query).replace(word, similar_word)
                 expanded_queries.append(new_query)
         return expanded_queries
-
     def similarwords_sensevec(self):
         result=[]
         #print(list(self.df_queries['topic'].unique()))

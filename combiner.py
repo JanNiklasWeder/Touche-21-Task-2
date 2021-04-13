@@ -28,6 +28,11 @@ class Combine:
 
         self.topics = df
         self.wD = Path(workingDirectory)
+        self.merged_df= pandas.DataFrame()
+
+        with open("data/noarg_topics.txt") as f:
+            noarg_topics = f.read()
+        self.noargs = [e.strip() for e in noarg_topics.split(",")] #for task 2020 only topic 6 and 13 do not need argument score
         
     def preprocess(self, lemma: bool = True):
 
@@ -54,14 +59,14 @@ class Combine:
     
 
     def run(self, 
-    preprocessing: bool = True, 
-    query_expansion: bool = True, 
+    preprocessing: bool = False,
     weights: dict = {'original':3,  'annotation':2.5,'sensevec': 2, 'embedded':2,'preprocessing':1.5,'syns':1}, method: str = 'max', 
     argumentative: bool = True,
     underscore: float = 0.55,
     trustworthiness: bool = True, 
     lemma: bool = True, 
     similarity_score: bool= True,
+    query_expansion: bool = False, 
     relation: bool = True, synonyms: bool = True, sensevec: bool=True, embedded: bool=True):
 
         if preprocessing:
@@ -74,23 +79,19 @@ class Combine:
         #auth = Auth(self.wD)
         #chatnoir = ChatNoir(auth.get_key("ChatNoir"), self.wD)
 
-        chatnoir = ChatNoir(self.topics, size=100) #topics as dataframe topic, query, tag
+        chatnoir = ChatNoir(self.topics, size=5) #topics as dataframe topic, query, tag
         chatnoir_df = chatnoir.get_response()
         #merging
-        merged_df = Merge(list(self.topics['topic'].unique()), chatnoir_df, weights, method=method).merging() #topics is not self.topics, topics is the list of titles
+        self.merged_df = Merge(list(self.topics['topic'].unique()), chatnoir_df, weights, method=method).merging() #topics is not self.topics, topics is the list of titles
        
         #ARGUMENT SCORES
         if argumentative:
-            '''
-            for task 2020 only topic 6 and 13 do not need argument score
-            '''
-            merged_df['needArgument'] = [i not in [6,13] for i in range(1,51)] #return True when not 6,13, False otherwise
+            self.merged_df['needArgument'] = [tp not in self.noargs for tp in list(self.merged_df['topic'])] #return True when not 6,13, False otherwise
             targer_model_name = "classifyWD"
-            merged_df = ArgumentScore(merged_df, targer_model_name, underscore).get_argument_score()
+            self.merged_df = ArgumentScore(self.merged_df, targer_model_name, underscore).get_argument_score()
         if similarity_score:
             transform_model_name = "gpt"
-            merged_df = SimilarityScore(list(self.topics['topic'].unique()), merged_df, transform_model_name)
-        print(merged_df)
+            self.merged_df = SimilarityScore(list(self.topics['topic'].unique()), self.merged_df, transform_model_name)
 
 if __name__ == "__main__":
 

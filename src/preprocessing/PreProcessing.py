@@ -6,22 +6,29 @@ import pandas
 import spacy
 from spacy.lang.en.stop_words import STOP_WORDS
 from typing import List, Union
-
+import re
 
 class PreProcessing:
 
     def __init__(self, query: pandas.DataFrame):
         self.querys = query
-        self.nlp = spacy.load("en_core_web_sm")
+        self.nlp = spacy.load("en_core_web_md")
 
     # ToDo add logging
     def lemma(self) -> None:
         result = []
+        regex = re.compile('[@_!#$%^&*()<>?/\|}{~:,]')
 
         for index, row in self.querys.iterrows():
+            
             buffer = self.nlp(row['query'])
-            buffer = " ".join([str(token.lemma_) for token in buffer])
-            result.append([row['topic'],buffer,'preprocessing'])
+            tmp=""
+            for token in buffer:
+              if (regex.search(token.lemma_)==None)==False:
+                tmp = tmp + token.lemma_
+              else:
+                tmp = tmp + " " + token.lemma_
+            result.append([row['topic'],tmp,'preprocessing'])
 
         self.querys = pandas.concat([self.querys, pandas.DataFrame(result, columns=['topic', 'query', 'tag'])])
 
