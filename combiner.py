@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas
 
-from src.preprocessing.query_expansion.QueryExpansion import QueryExpansion
+from src.preprocessing.QueryExpansion import QueryExpansion
 from src.preprocessing.PreProcessing import PreProcessing
 from src.merging.Merge import Merge
 
@@ -98,7 +98,7 @@ class Combine:
             merged_df = ArgumentScore(merged_df, targer_model_name, underscore).get_argument_score()
         if similarity_score:
             transform_model_name = "gpt"
-            merged_df = SimilarityScore(topics, merged_df, transform_model_name) #topics here is the list of orginal titles
+            merged_df = SimilarityScore(self.topics['topic'].unique()), merged_df, transform_model_name) #topics here is the list of orginal titles
 
         pandas.set_option('display.max_columns', None)
         print(merged_df)
