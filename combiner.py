@@ -5,12 +5,13 @@ from pathlib import Path
 
 import pandas
 
+from scores.Bert_Docker.load_bert import Bert
 from src.preprocessing.query_expansion.QueryExpansion import QueryExpansion
 from src.preprocessing.PreProcessing import PreProcessing
 
 from src.scores.PageRank.OpenPageRank import OpenPageRank
 
-from src.utility.ChatNoir.querys import ChatNoir, get_titles
+from src.utility.ChatNoir.querys import ChatNoir, get_titles, df_add_text
 from src.utility.auth.auth import Auth
 
 
@@ -47,12 +48,9 @@ class Combine:
     def argumentative(self):
         print("Hey")
 
-    def trusworthiness(self):
-        print("Hey")
-
     def run(self, preprocessing: bool = True, query_expansion: bool = True, argumentative: bool = True,
             trustworthiness: bool = True, lemma: bool = True, stopword: bool = True,
-            relation: bool = True, synonyms: bool = True):
+            relation: bool = True, synonyms: bool = True, bert:bool = True):
 
         if preprocessing:
             self.preprocess(lemma, stopword)
@@ -71,7 +69,6 @@ class Combine:
             # create argumentative score for every request
             print("Hey")
         '''
-        print(df)
         if trustworthiness:
             page_rank = OpenPageRank(auth.get_key("OpenPageRank"))
             df['target_hostname']=df['target_hostname'].str.replace('www\.', '', regex=True)
@@ -79,9 +76,14 @@ class Combine:
 
         pandas.set_option('display.max_columns', None)
 
-        if trustworthiness:
-            while True:
-                break
+        if bert:
+            df = df_add_text(df)
+            print(df)
+            bert = Bert(self.wD / "data/bert/")
+            df = bert.df_add_score(df)
+
+
+
         print(df)
 
 

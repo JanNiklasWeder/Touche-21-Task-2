@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import logging
 import pickle
+import re
 import time
 import requests
 import xml.etree.ElementTree as ET
@@ -13,7 +14,6 @@ import argparse
 from tqdm import tqdm
 
 
-
 def get_titles(file: Path) -> List[str]:
     tree = ET.parse(file)
     root = tree.getroot()
@@ -22,6 +22,90 @@ def get_titles(file: Path) -> List[str]:
     for title in root.iter('title'):
         buffer.append(title.text.strip())
     return buffer
+
+
+def uuid2doc(uuid, index: str = "cw12"):
+    url = 'https://www.chatnoir.eu/cache'
+
+    request_data = {
+        "uuid": uuid,
+        "index": index,
+        "raw": "raw",
+        "plain": "plain",
+    }
+
+    seconds = 10
+
+    for attempt in range(10):
+        success = False
+        try:
+            data = requests.get(url, request_data).text
+            success = True
+        except Exception as str_error:
+            logging.warning("Cannot retrieve Documents. Retrying in %s seconds" % seconds)
+            logging.warning("Code: %s" % str_error)
+
+            time.sleep(seconds)
+            seconds += seconds
+            if attempt == 9:
+                logging.critical("Failed 10 times. Exiting ...")
+                exit(1)
+
+        if success:
+            break
+
+    data = re.sub('<[^>]+>', '', data)
+    data = re.sub('\n', '', data)
+    data = re.sub('&[^;]+;', '', data)
+
+    return data
+
+
+def uuids2df(uuid: pandas.DataFrame) -> pandas.DataFrame:
+    save_path = Path.cwd() / "data/ChatNoirCache"
+
+    missing = uuid['uuid'].tolist()
+    save = None
+
+    if Path(save_path / "uuid.pickle").is_file():
+        logging.info("Loading text save")
+        save = pandas.read_csv(save_path / "uuid.csv")
+
+        with open(save_path / "uuid.pickle", 'rb') as filehandle:
+            saved = pickle.load(filehandle)
+            #saved = save['uuid'].unique().tolist()
+
+        missing = [x for x in missing if x not in saved]
+        if len(missing) > 0:
+            logging.info("Requesting missing docs ...")
+
+    frames = []
+
+    for uuid in tqdm(missing, desc="ChatNoir query docs progress"):
+        frames.append([uuid, uuid2doc(uuid)])
+
+    result = pandas.DataFrame(frames, columns=['uuid', 'FullText'])
+
+    if save is not None:
+        result = pandas.concat([save, result]).reset_index(drop=True)
+
+    if len(missing) > 0:
+        result.to_csv(path_or_buf=save_path / "uuid.csv", index=False)
+
+        with open(save_path / "uuid.pickle", 'wb') as filehandle:
+            pickle.dump(result['uuid'].tolist(), filehandle)
+
+
+    return result
+
+
+def df_add_text(df: pandas.DataFrame):
+    uuids = pandas.DataFrame(df['uuid'].unique(), columns=["uuid"])
+
+    result = uuids2df(uuids)
+
+    result = df.merge(result, how="left", on="uuid")
+    return result
 
 
 class ChatNoir:
@@ -107,7 +191,7 @@ class ChatNoir:
                     buffer = query, answer['trec_id'], answer['uuid'], answer['target_hostname'], answer['score']
                     answers.append(buffer)
 
-            answer = pandas.DataFrame(answers, columns=['query', 'TrecID', 'UUID', 'target_hostname', 'Score_ChatNoir'])
+            answer = pandas.DataFrame(answers, columns=['query', 'TrecID', 'uuid', 'target_hostname', 'Score_ChatNoir'])
             result = result.append(answer)
 
             Path.mkdir(save_path.parent, parents=True, exist_ok=True)
@@ -118,15 +202,12 @@ class ChatNoir:
 
         # removing unrequested queries
         result = result[result['query'].isin(querys)]
-        print(data)
-        print(result)
 
         data = data.merge(result, how="inner", on="query")
         return data
 
 
 if __name__ == "__main__":
-
     '''
     not working at the moment
     '''
