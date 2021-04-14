@@ -66,6 +66,7 @@ class Combine:
     trustworthiness: bool = True, 
     lemma: bool = True, 
     similarity_score: bool= True,
+    transform_model_name: str = 'gpt',
     query_expansion: bool = False, 
     relation: bool = True, synonyms: bool = True, sensevec: bool=True, embedded: bool=True):
 
@@ -73,25 +74,24 @@ class Combine:
             self.preprocess(lemma) #remove stopword
 
         if query_expansion:
-            self.query_expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded)
+            self.query_expansion(relation=False, synonyms=synonyms, sensevec=False, embedded=embedded)
 
         # request to chatnoir
         #auth = Auth(self.wD)
         #chatnoir = ChatNoir(auth.get_key("ChatNoir"), self.wD)
 
-        chatnoir = ChatNoir(self.topics, size=5) #topics as dataframe topic, query, tag
+        chatnoir = ChatNoir(self.topics, size=2) #topics as dataframe topic, query, tag
         chatnoir_df = chatnoir.get_response()
         #merging
         self.merged_df = Merge(list(self.topics['topic'].unique()), chatnoir_df, weights, method=method).merging() #topics is not self.topics, topics is the list of titles
        
         #ARGUMENT SCORES
         if argumentative:
-            self.merged_df['needArgument'] = [tp not in self.noargs for tp in list(self.merged_df['topic'])] #return True when not 6,13, False otherwise
+            self.merged_df['needArgument'] = [tp not in ['What is the longest river in the U.S.?', 'What is the highest mountain on Earth?'] for tp in list(self.merged_df['topic'])] #return True when not 6,13, False otherwise
             targer_model_name = "classifyWD"
             self.merged_df = ArgumentScore(self.merged_df, targer_model_name, underscore).get_argument_score()
         if similarity_score:
-            transform_model_name = "gpt"
-            self.merged_df = SimilarityScore(list(self.topics['topic'].unique()), self.merged_df, transform_model_name)
+            self.merged_df = SimilarityScore(list(self.topics['topic'].unique()), self.merged_df, transform_model_name).get_similarity_scores()
 
 if __name__ == "__main__":
 
