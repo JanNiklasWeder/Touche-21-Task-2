@@ -1,0 +1,10 @@
+FILE for generated_text:
+- must changed for task 2021
+
+FROM:
+filename="text_task20/generated_texts.txt"
+n_samples = 5
+
+TO:
+filename="text_task21/generated_texts.txt"
+n_samples = 5 (actual)

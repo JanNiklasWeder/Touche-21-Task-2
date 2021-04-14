@@ -156,6 +156,9 @@ class ChatNoir:
 
     def get_response(self, data: pandas.DataFrame, querysize: str) -> pandas.DataFrame:
         querys = data['query'].tolist()
+        
+        # RESPONSES MUST BE ASSIGNED WITH TAGS
+        tags = data['tag'].tolist()
 
         querysize = str(querysize)
 
