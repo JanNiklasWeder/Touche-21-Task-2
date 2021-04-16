@@ -8,23 +8,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  linter:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup Environment
-      run: |
-        $CONDA/bin/conda env update --file environmentCPU.yml --name base
-    - name: black
-      run: |
-        black src/ tests/
-    - name: flake8
-      run: |
-        flake8 src/ tests/
-    - name: mypy
-      run: |
-        mypy src/ tests/
-
   unittests:
     runs-on: ubuntu-latest
     steps:
@@ -41,4 +24,4 @@ jobs:
         PASSPHRASE: ${{ secrets.PASSPHRASE }}
     - name: unittest
       run: |
-        $CONDA/bin/conda python -m unittest discover -s tests/
+        python -m unittest discover -s tests/
