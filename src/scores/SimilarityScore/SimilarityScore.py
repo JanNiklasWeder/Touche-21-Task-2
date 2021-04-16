@@ -6,6 +6,7 @@ import time
 from collections import Counter
 from itertools import chain
 import pandas as pd
+from pathlib import Path
 
 '''
 topics is a list of all topics
@@ -17,7 +18,7 @@ from simpletransformers.language_representation import RepresentationModel
 from scipy.spatial import distance
 
 class SimilarityScore:
-    def __init__(self, all_topics: [str], data: pd.DataFrame, transform_model_name: str =='gpt'):
+    def __init__(self, all_topics: [str], data: pd.DataFrame, transform_model_name: str='gpt'):
       
         self.data = data
         self.n_samples = 5
@@ -88,7 +89,8 @@ class SimilarityScore:
         2. transform "topic[i]. generated_text[i][j]" to vector
         3. j= [0,n_samples].
         '''
-        filename="text_task20/generated_texts.txt"
+        path = Path(__file__).parent.joinpath('text_task20/generated_texts.txt')
+        filename=path
 
         with open(filename) as f:
             lines = f.read()
@@ -106,7 +108,7 @@ class SimilarityScore:
         topic_id=0
         for i in range(0,len(self.topics)):
             topic_id=i+1
-            liste = [topics[i]+". "+ e for e in generated_texts[i+1]]
+            liste = [self.topics[i]+". "+ e for e in generated_texts[i+1]]
             dict_combined_data[topic_id] = liste
         
         generated_texts = dict_combined_data[required_topic_id]

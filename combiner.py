@@ -5,17 +5,17 @@ from pathlib import Path
 
 import pandas
 
+from src.preprocessing.QueryExpansion import QueryExpansion
 from src.postprocessing.SVM import svm
 from src.scores.Bert_Docker.load_bert import Bert
-# from src.preprocessing.query_expansion import QueryExpansion
+
 from src.preprocessing.PreProcessing import PreProcessing
 from src.merging.Merge import Merge
-
-from src.ChatNoir.ChatNoir import ChatNoir
 
 from src.scores.PageRank.OpenPageRank import OpenPageRank
 from src.scores.ArgumentScore.ArgumentScore import ArgumentScore
 from src.scores.SimilarityScore.SimilarityScore import SimilarityScore
+
 
 from src.utility.ChatNoir.querys import ChatNoir, get_titles, df_add_text
 from src.utility.auth.auth import Auth
@@ -31,8 +31,17 @@ class Combine:
 
         self.topics = topics
         self.wD = Path(workingDirectory)
+        self.merged_df= pandas.DataFrame()
 
-    def preprocess(self, lemma: bool = True, stopword: bool = False):
+        try:
+            with open(self.wD / "data/noarg_topics.txt") as f:
+                noarg_topics = f.read()
+            self.noargs = [e.strip() for e in noarg_topics.split(",")] #for task 2020 only topic 6 and 13 do not need argument score
+        except FileNotFoundError:
+            logging.warning("No noarg_topics.txt found assuming it is empty")
+            self.noargs = []
+
+    def preprocess(self, lemma: bool = True):
 
         # ToDo order is not directly changeable
         # ToDo split lemma and stopword into single functions
@@ -42,21 +51,16 @@ class Combine:
 
         if lemma:
             preproc.lemma()
-        # We do not use stopword more
-        if stopword:
-            preproc.stopword()
 
         buffer = preproc.getQuery()
         self.topics = buffer
         self.topics = self.topics.sort_index()
         self.topics = self.topics.reset_index(drop=True)
-
-    def query_expansion(self, relation: bool = False, synonyms: bool = False, sensevec: bool = False,
-                        embedded: bool = False):
-        pass
-        # expansion = QueryExpansion(self.topics)
-        # self.topics = expansion.expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded)
-
+        
+    def query_expansion(self, relation: bool = False, synonyms: bool = False, sensevec: bool=False, embedded: bool=False):
+        expansion = QueryExpansion(self.topics)
+        self.topics = expansion.expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded) 
+        
     def run(self,
             preprocessing: bool = True,
             query_expansion: bool = True,
@@ -71,7 +75,8 @@ class Combine:
             score_bert: bool = True,
             dry_run: bool = False,
             test:bool = True,
-            query_size: int = 100):
+            query_size: int = 100,
+           transform_model_name: str = 'gpt'):
         pandas.set_option('display.max_columns', None)
 
         if test:
@@ -88,8 +93,7 @@ class Combine:
 
         # REMOVE ATTRIBUTE stopwords
         if preprocessing and not dry_run:
-            stopword = False
-            self.preprocess(lemma, stopword)
+            self.preprocess(lemma)
 
         if query_expansion and not dry_run:
             self.query_expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded)
@@ -108,7 +112,7 @@ class Combine:
             qrels = qrels[["TopicID", "TrecID", "qrel"]]
 
             df = pandas.merge(qrels, df, how="inner", on=["TrecID", "TopicID"])
-
+            
         else:
             df = chatnoir.get_response(self.topics, query_size)
 
@@ -153,8 +157,8 @@ class Combine:
         else:
             df = svm.df_add_score(df, unique_str,self.wD)
 
-
 if __name__ == "__main__":
+
     import argparse
 
     parser = argparse.ArgumentParser()

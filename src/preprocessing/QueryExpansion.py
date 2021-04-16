@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+import tarfile
 
 import nltk
+import wget as wget
+
 nltk.download('wordnet')
 from nltk.corpus import  wordnet
 from typing import List
@@ -29,8 +32,20 @@ class QueryExpansion:
         
         self.nlp = spacy.load("en_core_web_md")
         self.top_syns = top_syns
-        
-        path = Path(__file__).parent.joinpath('s2v_reddit_2015_md/s2v_old')
+
+        path = Path.cwd() / "data/s2v_reddit_2015_md"
+
+        if not path.is_dir():
+            path = Path.cwd() / "data/s2v_reddit_2015_md.tar.gz"
+
+            wget.download("https://github.com/explosion/sense2vec/releases/download/v1.0.0/s2v_reddit_2015_md.tar.gz",
+                          str(path))
+
+            with tarfile.open(path) as tar:
+                path = path.parent / "s2v_reddit_2015_md"
+                tar.extractall(path)
+
+        path = path / "s2v_old"
         self.sense = self.nlp.add_pipe("sense2vec").from_disk(path)
         self.standalone_s2v = Sense2Vec().from_disk(path) #it is not dubplicated
         
@@ -71,7 +86,6 @@ class QueryExpansion:
                 new_query=copy.deepcopy(query).replace(word, similar_word)
                 expanded_queries.append(new_query)
         return expanded_queries
-
     def similarwords_sensevec(self):
         result=[]
         #print(list(self.df_queries['topic'].unique()))
