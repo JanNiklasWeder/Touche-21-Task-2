@@ -14,14 +14,18 @@ import argparse
 from tqdm import tqdm
 
 
-def get_titles(file: Path) -> List[str]:
+def get_titles(file: Path) -> pandas.DataFrame:
     tree = ET.parse(file)
     root = tree.getroot()
     buffer = []
 
-    for title in root.iter('title'):
-        buffer.append(title.text.strip())
-    return buffer
+    for topic in root.iter('topic'):
+        title = topic.find('title').text
+        id = topic.find('number').text
+
+        buffer.append([int(id.strip()),title.strip()])
+
+    return pandas.DataFrame(buffer,columns=['TopicID','topic'])
 
 
 def uuid2doc(uuid, index: str = "cw12"):
@@ -154,11 +158,8 @@ class ChatNoir:
 
         return output
 
-    def get_response(self, data: pandas.DataFrame, querysize: str) -> pandas.DataFrame:
+    def get_response(self, data: pandas.DataFrame, querysize: int) -> pandas.DataFrame:
         querys = data['query'].tolist()
-        
-        # RESPONSES MUST BE ASSIGNED WITH TAGS
-        tags = data['tag'].tolist()
 
         querysize = str(querysize)
 
@@ -208,35 +209,3 @@ class ChatNoir:
 
         data = data.merge(result, how="inner", on="query")
         return data
-
-
-if __name__ == "__main__":
-    '''
-    not working at the moment
-    '''
-    wd = Path(os.getcwd())
-    wd = wd.parent
-
-    auth = Auth(wd)
-    keyChatNoir = auth.get_key("ChatNoir")
-
-    chatnoir = ChatNoir(keyChatNoir, wd)
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("Topics", type=str,
-                        help="File path to 'topics-task-2.xml'")
-    parser.add_argument("-v", "--loglevel", type=str, default="WARNING",
-                        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-                        help="Set the shown log events (default: %(default)s)")
-
-    args = parser.parse_args()
-    logging.basicConfig(level=args.loglevel)
-
-    topics = get_titles(args.Topics)
-
-    # out = open("output", "w")
-
-    size = 50
-    test = chatnoir.get_response(topics, size)
-
-    print(test)

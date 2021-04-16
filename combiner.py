@@ -5,13 +5,13 @@ from pathlib import Path
 
 import pandas
 
+from postprocessing.SVM import svm
 from scores.Bert_Docker.load_bert import Bert
-from src.preprocessing.query_expansion.QueryExpansion import QueryExpansion
+# from src.preprocessing.query_expansion import QueryExpansion
 from src.preprocessing.PreProcessing import PreProcessing
 from src.merging.Merge import Merge
 
 from src.ChatNoir.ChatNoir import ChatNoir
-
 
 from src.scores.PageRank.OpenPageRank import OpenPageRank
 from src.scores.ArgumentScore.ArgumentScore import ArgumentScore
@@ -26,22 +26,23 @@ class Combine:
     def __init__(self, topics_xml: str, workingDirectory: Path):
 
         topics = get_titles(topics_xml)
-        df = pandas.DataFrame(list(zip(topics, topics, len(topics)*['original'])), columns=['topic', 'query', 'tag'])
+        topics["query"] = topics["topic"]
+        topics["tag"] = "original"
 
-        self.topics = df
+        self.topics = topics
         self.wD = Path(workingDirectory)
 
     def preprocess(self, lemma: bool = True, stopword: bool = False):
 
         # ToDo order is not directly changeable
         # ToDo split lemma and stopword into single functions
-        
+
         # PREPROCESSING to EXPANSION
         preproc = PreProcessing(self.topics)
 
         if lemma:
             preproc.lemma()
-        #We do not use stopword more
+        # We do not use stopword more
         if stopword:
             preproc.stopword()
 
@@ -50,34 +51,62 @@ class Combine:
         self.topics = self.topics.sort_index()
         self.topics = self.topics.reset_index(drop=True)
 
-    def query_expansion(self, relation: bool = False, synonyms: bool = False, sensevec: bool=False, embedded: bool=False):
-        expansion = QueryExpansion(self.topics)
-        self.topics = expansion.expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded) 
-    
-    def run(self, 
-    preprocessing: bool = True, 
-    query_expansion: bool = True, 
-    weights: dict = {'original':5,  'annotation':4,'sensevec': 3, 'embedded':3,'preprocessing':2,'syns':1}, method: str = 'max', 
-    argumentative: bool = True,
-    underscore: float = 0.55,
-    trustworthiness: bool = True, 
-    lemma: bool = True, 
-    relation: bool = True, synonyms: bool = True, sensevec: bool=True, embedded: bool=True):
-    similarity_score: bool= True,
-    bert:bool = True):
+    def query_expansion(self, relation: bool = False, synonyms: bool = False, sensevec: bool = False,
+                        embedded: bool = False):
+        pass
+        # expansion = QueryExpansion(self.topics)
+        # self.topics = expansion.expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded)
+
+    def run(self,
+            preprocessing: bool = True,
+            query_expansion: bool = True,
+            weights: dict = {'original': 5, 'annotation': 4, 'sensevec': 3, 'embedded': 3, 'preprocessing': 2,
+                             'syns': 1}, method: str = 'max',
+            score_argumentative: bool = True,
+            underscore: float = 0.55,
+            score_trustworthiness: bool = True,
+            lemma: bool = True,
+            relation: bool = True, synonyms: bool = True, sensevec: bool = True, embedded: bool = True,
+            score_similarity: bool = True,
+            score_bert: bool = True,
+            dry_run: bool = False):
+
+        # create identification str for the svm
+        saved_args = locals()
+        unique_str = ""
+        for key, value in saved_args.copy().items():
+            if type(value) is bool and key.startswith("score") and value is True:
+                unique_str = unique_str + key.lstrip("score")
 
         # REMOVE ATTRIBUTE stopwords
-        if preprocessing:
-            stopword=False
+        if preprocessing and not dry_run:
+            stopword = False
             self.preprocess(lemma, stopword)
 
-        if query_expansion:
+        if query_expansion and not dry_run:
             self.query_expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded)
 
         # request to chatnoir
-        #auth = Auth(self.wD)
-        #chatnoir = ChatNoir(auth.get_key("ChatNoir"), self.wD)
+        auth = Auth(self.wD)
+        chatnoir = ChatNoir(auth.get_key("ChatNoir"), self.wD)
 
+        if dry_run:
+            df = chatnoir.get_response(self.topics, 1000)
+
+            qrels = pandas.read_csv(Path.cwd() / "data/touche2020-task2-relevance-withbaseline.qrels",
+                                    sep=" ",
+                                    names=["TopicID", "Spacer", "TrecID", "qrel"])
+
+            qrels = qrels[["TopicID", "TrecID", "qrel"]]
+
+            print(df)
+            df = pandas.merge(qrels, df, how="inner", on=["TrecID", "TopicID"])
+            print(df)
+
+        else:
+            df = chatnoir.get_response(self.topics, 100)
+
+        """
         chatnoir = ChatNoir(self.topics, size=100) #topics as dataframe topic, query, tag
         chatnoir_df = chatnoir.get_response()
 
@@ -85,7 +114,7 @@ class Combine:
         df = Merge(list(self.topics['topic'].unique()), chatnoir_df, weights, method=method).merging() #topics is not self.topics, topics is the list of titles
        
         #ARGUMENT SCORES
-        if argumentative:
+        if score_argumentative:
             #MERGED_DF: must have column "needArgument"
             #needArgument must be added manually.
             '''
@@ -94,24 +123,33 @@ class Combine:
             df['needArgument'] = [i not in [6,13] for i in range(1,51)] #return True when not 6,13, False otherwise
             targer_model_name = "classifyWD"
             df = ArgumentScore(df, targer_model_name, underscore).get_argument_score()
-        if similarity_score:
+
+        if score_similarity:
             transform_model_name = "gpt"
-            df = SimilarityScore(topics, df, transform_model_name) #topics here is the list of orginal titles
-        if trustworthiness:
+            df = SimilarityScore(list(self.topics['topic'].unique()), df, transform_model_name) #topics here is the list of orginal titles
+        """
+
+        if score_trustworthiness:
             page_rank = OpenPageRank(auth.get_key("OpenPageRank"))
-            df['target_hostname']=df['target_hostname'].str.replace('www\.', '', regex=True)
+            df['target_hostname'] = df['target_hostname'].str.replace('www\.', '', regex=True)
             df = page_rank.df_add_score(df)
 
-        pandas.set_option('display.max_columns', None)
-        print(df)
 
-        if bert:
+        if score_bert:
             df = df_add_text(df)
             print(df)
             bert = Bert(self.wD / "data/bert/")
             df = bert.df_add_score(df)
 
+        if dry_run:
+            svm.train(df, unique_str)
+            print("Finished dry run")
+            exit(0)
+        else:
+            df = svm.df_add_score(df, unique_str)
+
         print(df)
+
 
 if __name__ == "__main__":
     import argparse
@@ -127,12 +165,12 @@ if __name__ == "__main__":
     NEED WEIGHTS FOR MERGING
     '''
     parser.add_argument("-W", "--WeightsMerging", type=dict, default={
-        'original':5,  
-        'annotation':4,
-        'sensevec': 3, 
-        'embedded':3,
-        'preprocessing':2,
-        'syns':1},
+        'original': 5,
+        'annotation': 4,
+        'sensevec': 3,
+        'embedded': 3,
+        'preprocessing': 2,
+        'syns': 1},
                         help="Adding weights for merging responses")
 
     parser.add_argument("-M", "--MergeMethod", type=str, default='max',
@@ -140,16 +178,19 @@ if __name__ == "__main__":
 
     parser.add_argument("-A", "--Argumentative", type=bool, default=True,
                         help="Activate the argumentative score (default: %(default)s)")
-
+    parser.add_argument("-B", "--Bert", action='store_true', default=False,
+                        help="Activate the computation of a score via Bert (default: %(default)s)")
 
     parser.add_argument("-U", "--Underscore", type=float, default=0.55,
-                        help="Underscore for argument score (default: %(default)s)")                    
+                        help="Underscore for argument score (default: %(default)s)")
 
     parser.add_argument("-T", "--Trustworthiness", type=bool, default=True,
                         help="Activate the Trustworthiness score (default: %(default)s)")
     parser.add_argument("-v", "--loglevel", type=str, default="WARNING",
                         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
                         help="Set the detail of the log events (default: %(default)s)")
+    parser.add_argument("--DryRun", action='store_true', default=False,
+                        help="Start dry run to train the svm (default: %(default)s)")
     args = parser.parse_args()
 
     logging.basicConfig(filename="run.log", level=args.loglevel, filemode='w')
@@ -157,7 +198,14 @@ if __name__ == "__main__":
     wd = os.getcwd()
 
     combiner = Combine(args.Topics, wd)
-    combiner.run(args.Preprocessing, 
-                args.QueryExpansion, args.WeightsMerging, args.MergeMethod, 
-                args.Argumentative, args.Underscore, 
-                args.Trustworthiness)
+
+
+    combiner.run(preprocessing=args.Preprocessing,
+                 query_expansion=args.QueryExpansion,
+                 weights=args.WeightsMerging,
+                 method=args.MergeMethod,
+                 score_argumentative=args.Argumentative,
+                 underscore=args.Underscore,
+                 score_trustworthiness=args.Trustworthiness,
+                 score_bert=args.Bert,
+                 dry_run=args.DryRun)
