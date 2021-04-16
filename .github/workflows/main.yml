@@ -8,14 +8,16 @@ on:
   workflow_dispatch:
 
 jobs:
-  unittests:
+  test:
+    name: unittest
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Setup Environment
-      run: |
-        $CONDA/bin/conda env update --file environmentCPU.yml --name touche
-        $CONDA/bin/conda activate touche
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        activate-environment: touche
+        environment-file: environmentCPU.yml
+        auto-activate-base: false
 
     - name: keys
       shell: bash
@@ -25,5 +27,6 @@ jobs:
       env:
         PASSPHRASE: ${{ secrets.PASSPHRASE }}
     - name: unittest
+      shell: bash -l {0}
       run: |
         python -m unittest discover -s tests/
