@@ -12,7 +12,7 @@ class PreProcessing:
 
     def __init__(self, query: pandas.DataFrame):
         self.querys = query
-        self.nlp = spacy.load("en_core_web_sm")
+        self.nlp = spacy.load("en_core_web_md")
 
     # ToDo add logging
     def lemma(self) -> None:
