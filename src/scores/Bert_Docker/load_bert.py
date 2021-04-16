@@ -18,17 +18,14 @@ from simpletransformers.classification import ClassificationModel
 
 class Bert:
     def __init__(self, path_to_model: Path):
-        print(path_to_model)
         model_args = ClassificationArgs()
 
         cache_dir = path_to_model / "cache/"
-        cache_dir.mkdir(parents=True,exist_ok=True)
+        cache_dir.mkdir(parents=True, exist_ok=True)
         model_args.cache_dir = cache_dir
 
-
-
         self.model = ClassificationModel(
-           "bert", path_to_model, use_cuda=torch.cuda.is_available(),args=model_args
+            "bert", path_to_model, use_cuda=torch.cuda.is_available(), args=model_args
         )
 
     def predict(self, topic: str, text: str):
@@ -40,7 +37,6 @@ class Bert:
                 ]
             ]
         )
-
 
         logging.info("Raw prediction was : " + str(raw_output))
         return prediction
