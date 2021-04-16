@@ -36,7 +36,7 @@ jobs:
       shell: bash
       run: |
         gpg --quiet --batch --yes --decrypt --passphrase="$PASSPHRASE" \
-        --output keys.csv keys.csv.gpg
+        --output tests/input/keys.csv tests/input/keys.csv.gpg
       env:
         PASSPHRASE: ${{ secrets.PASSPHRASE }}
     - name: unittest
