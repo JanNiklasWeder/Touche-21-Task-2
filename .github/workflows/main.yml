@@ -1,4 +1,4 @@
-name: CI
+name: Tests
 
 on:
   pull_request:
@@ -8,16 +8,27 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-linux:
+  test:
+    name: unittest
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Setup Environment
-      run: |
-        $CONDA/bin/conda env update --file environmentCPU.yml --name base
-    - name: flake8
-      run: |
-        $CONDA/bin/conda install flake8
-        $CONDA/bin/flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        $CONDA/bin/flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        activate-environment: touche
+        environment-file: environmentCPU.yml
+        auto-activate-base: false
 
+    - name: keys
+      shell: bash
+      run: |
+        gpg --quiet --batch --yes --decrypt --passphrase="$PASSPHRASE" \
+        --output tests/input/keys.csv tests/input/keys.csv.gpg
+        gpg --quiet --batch --yes --decrypt --passphrase="$PASSPHRASE" \
+                --output data/keys.csv tests/input/keys.csv.gpg
+      env:
+        PASSPHRASE: ${{ secrets.PASSPHRASE }}
+    - name: unittest
+      shell: bash -l {0}
+      run: |
+        python -m unittest discover -s tests/

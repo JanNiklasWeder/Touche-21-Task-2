@@ -1,0 +1,39 @@
+name: linter
+
+on:
+  pull_request:
+    paths:
+      - "**.py"
+
+  workflow_dispatch:
+
+jobs:
+  linter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: touche
+          environment-file: environmentCPU.yml
+          auto-activate-base: false
+
+    - name: flake8
+      shell: bash -l {0}
+      run: |
+        conda install flake8
+        python -m flake8 src/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        python -m flake8 src/ tests/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: black
+      shell: bash -l {0}
+      run: |
+        conda install black
+        black src/ tests/
+
+
+    - name: mypy
+      shell: bash -l {0}
+      run: |
+        conda install mypy
+        mypy src/ tests/

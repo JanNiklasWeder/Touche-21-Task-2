@@ -1,0 +1,7 @@
+# cache files
+/data/PageRank/
+/data/ChatNoirCache/
+/data/bert/
+
+# file with necessary keys
+/data/keys.csv
