@@ -13,7 +13,7 @@ import requests
 
 class OpenPageRank():
 
-    def __init__(self, key: [str], wd: Path = Path(os.getcwd())):
+    def __init__(self, key: [str], wd: Path = Path.cwd()):
         self.wd = wd / "data/PageRank"
         Path.mkdir(self.wd, parents=True, exist_ok=True)
         self.key = key
@@ -37,7 +37,6 @@ class OpenPageRank():
             success = False
             try:
                 output = requests.get(self.url, params=request_data, headers=headers)
-                print(output)
                 output = output.json()['response']
                 success = True
             except Exception as str_error:
@@ -82,7 +81,6 @@ class OpenPageRank():
             frames = [*frames, *self.request_page_rank(request)]
 
         result = pandas.DataFrame(frames, columns=['target_hostname', 'Score_PageRank'])
-        print(result)
 
         if save is not None:
             result = pandas.concat([save, result]).reset_index(drop=True)
@@ -92,8 +90,6 @@ class OpenPageRank():
 
             with open(save_path / "websites.pickle", 'wb') as filehandle:
                 pickle.dump(websites['target_hostname'].tolist(), filehandle)
-
-        print(result)
 
         return result
 

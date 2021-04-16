@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pandas
 
-from postprocessing.SVM import svm
-from scores.Bert_Docker.load_bert import Bert
+from src.postprocessing.SVM import svm
+from src.scores.Bert_Docker.load_bert import Bert
 # from src.preprocessing.query_expansion import QueryExpansion
 from src.preprocessing.PreProcessing import PreProcessing
 from src.merging.Merge import Merge
@@ -69,7 +69,15 @@ class Combine:
             relation: bool = True, synonyms: bool = True, sensevec: bool = True, embedded: bool = True,
             score_similarity: bool = True,
             score_bert: bool = True,
-            dry_run: bool = False):
+            dry_run: bool = False,
+            test:bool = True,
+            query_size: int = 100):
+        pandas.set_option('display.max_columns', None)
+
+        if test:
+            query_size = 3
+        elif dry_run:
+            query_size = 1000
 
         # create identification str for the svm
         saved_args = locals()
@@ -91,20 +99,18 @@ class Combine:
         chatnoir = ChatNoir(auth.get_key("ChatNoir"), self.wD)
 
         if dry_run:
-            df = chatnoir.get_response(self.topics, 1000)
+            df = chatnoir.get_response(self.topics, query_size)
 
-            qrels = pandas.read_csv(Path.cwd() / "data/touche2020-task2-relevance-withbaseline.qrels",
+            qrels = pandas.read_csv(self.wD / "data/touche2020-task2-relevance-withbaseline.qrels",
                                     sep=" ",
                                     names=["TopicID", "Spacer", "TrecID", "qrel"])
 
             qrels = qrels[["TopicID", "TrecID", "qrel"]]
 
-            print(df)
             df = pandas.merge(qrels, df, how="inner", on=["TrecID", "TopicID"])
-            print(df)
 
         else:
-            df = chatnoir.get_response(self.topics, 100)
+            df = chatnoir.get_response(self.topics, query_size)
 
         """
         chatnoir = ChatNoir(self.topics, size=100) #topics as dataframe topic, query, tag
@@ -137,18 +143,15 @@ class Combine:
 
         if score_bert:
             df = df_add_text(df)
-            print(df)
             bert = Bert(self.wD / "data/bert/")
             df = bert.df_add_score(df)
 
         if dry_run:
-            svm.train(df, unique_str)
+            svm.train(df, unique_str,self.wD)
             print("Finished dry run")
-            exit(0)
+            return
         else:
-            df = svm.df_add_score(df, unique_str)
-
-        print(df)
+            df = svm.df_add_score(df, unique_str,self.wD)
 
 
 if __name__ == "__main__":
