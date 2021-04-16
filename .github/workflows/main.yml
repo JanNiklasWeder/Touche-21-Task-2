@@ -24,6 +24,8 @@ jobs:
       run: |
         gpg --quiet --batch --yes --decrypt --passphrase="$PASSPHRASE" \
         --output tests/input/keys.csv tests/input/keys.csv.gpg
+        gpg --quiet --batch --yes --decrypt --passphrase="$PASSPHRASE" \
+                --output data/keys.csv tests/input/keys.csv.gpg
       env:
         PASSPHRASE: ${{ secrets.PASSPHRASE }}
     - name: unittest
