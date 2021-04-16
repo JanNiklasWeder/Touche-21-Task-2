@@ -14,7 +14,6 @@ class TestCombine(TestCase):
     def test_run(self):
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
-            os.chdir(directory)
             (directory / "data").mkdir()
             shutil.copy2(input / "keys.csv", directory /"data/keys.csv")
             shutil.copy2(Path(__file__).parent.parent / "data/touche2020-task2-relevance-withbaseline.qrels",
@@ -59,5 +58,6 @@ class TestCombine(TestCase):
 
             self.assertTrue(expr=True)
 
-            shutil.rmtree(input.parent / "data")
+            print(input)
+            shutil.rmtree(input.parent / "data",ignore_errors=True)
 
