@@ -23,41 +23,54 @@ class TestCombine(TestCase):
 
             self.assertIsInstance(combiner,Combine)
 
-            combiner.run(
-                score_argumentative=True,
-                score_trustworthiness=True,
-                score_similarity=True,
-                score_bert=False,
-                dry_run=True)
+            run = True
+            msg = ""
 
-            self.assertTrue(expr=True)
+            try:
+                combiner.run(
+                    score_argumentative=True,
+                    score_trustworthiness=True,
+                    score_similarity=True,
+                    score_bert=False,
+                    dry_run=True)
+            except Exception as error:
+                run = False
+                msg = error
 
-            combiner.run(
-                preprocessing= True,
-                query_expansion= True,
-                weights = {'original': 5,
-                                 'annotation': 4,
-                                 'sensevec': 3,
-                                 'embedded': 3,
-                                 'preprocessing': 2,
-                                 'syns': 1},
-                method= 'max',
-                score_argumentative = True,
-                underscore = 0.55,
-                score_trustworthiness = True,
-                lemma= True,
-                relation = True,
-                synonyms= True,
-                sensevec= True,
-                embedded= True,
-                score_similarity= True,
-                score_bert= False,
-                dry_run= False,
-                test = True
-            )
+            self.assertTrue(expr=run, msg=msg)
 
-            self.assertTrue(expr=True)
+            run = True
+            msg = ""
 
-            print(input)
+            try:
+                combiner.run(
+                    preprocessing= True,
+                    query_expansion= True,
+                    weights = {'original': 5,
+                                     'annotation': 4,
+                                     'sensevec': 3,
+                                     'embedded': 3,
+                                     'preprocessing': 2,
+                                     'syns': 1},
+                    method= 'max',
+                    score_argumentative = True,
+                    underscore = 0.55,
+                    score_trustworthiness = True,
+                    lemma= True,
+                    relation = True,
+                    synonyms= True,
+                    sensevec= True,
+                    embedded= True,
+                    score_similarity= True,
+                    score_bert= False,
+                    dry_run= False,
+                    test = True
+                )
+            except Exception as error:
+                msg = error
+                run = False
+
+            self.assertTrue(expr=run,msg=msg)
+
             shutil.rmtree(input.parent / "data",ignore_errors=True)
 

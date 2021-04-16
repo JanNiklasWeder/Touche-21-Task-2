@@ -2,6 +2,8 @@
 /data/PageRank/
 /data/ChatNoirCache/
 /data/bert/
+/data/s2v_reddit_2015_md/
+
 
 # file with necessary keys
 /data/keys.csv

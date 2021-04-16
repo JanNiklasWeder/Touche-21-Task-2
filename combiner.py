@@ -33,10 +33,14 @@ class Combine:
         self.wD = Path(workingDirectory)
         self.merged_df= pandas.DataFrame()
 
-        with open("data/noarg_topics.txt") as f:
-            noarg_topics = f.read()
-        self.noargs = [e.strip() for e in noarg_topics.split(",")] #for task 2020 only topic 6 and 13 do not need argument score
-        
+        try:
+            with open(self.wD / "data/noarg_topics.txt") as f:
+                noarg_topics = f.read()
+            self.noargs = [e.strip() for e in noarg_topics.split(",")] #for task 2020 only topic 6 and 13 do not need argument score
+        except FileNotFoundError:
+            logging.warning("No noarg_topics.txt found assuming it is empty")
+            self.noargs = []
+
     def preprocess(self, lemma: bool = True):
 
         # ToDo order is not directly changeable

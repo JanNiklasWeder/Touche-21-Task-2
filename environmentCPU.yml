@@ -69,6 +69,7 @@ dependencies:
     - send2trash==1.5.0
     - wandb==0.10.13
     - webencodings==0.5.1
+    - wget==3.2
     - sense2vec
     - https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.0.0/en_core_web_md-3.0.0-py3-none-any.whl
 prefix: /home/roberto/anaconda3/envs/project
