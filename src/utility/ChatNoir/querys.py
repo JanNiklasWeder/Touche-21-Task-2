@@ -200,7 +200,7 @@ class ChatNoir:
                     buffer = query, answer['trec_id'], answer['uuid'], answer['title'], answer['snippet'], answer['target_hostname'], answer['score']
                     answers.append(buffer)
 
-            answer = pandas.DataFrame(answers, columns=['query', 'TrecID', 'UUID', 'title', 'snippet', 'target_hostname', 'Score_ChatNoir'])
+            answer = pandas.DataFrame(answers, columns=['query', 'TrecID', 'uuid', 'title', 'snippet', 'target_hostname', 'Score_ChatNoir'])
             result = result.append(answer)
 
             Path.mkdir(save_path.parent, parents=True, exist_ok=True)
