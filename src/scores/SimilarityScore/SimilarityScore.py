@@ -107,7 +107,7 @@ class SimilarityScore:
           origin = self.topicid_topic[topic_id]
           print(origin)
           combined = [ origin + ". " + e for e in generated]
-          dict_combined_data[topicid] = combined
+          dict_combined_data[topic_id] = combined
         
         return dict_combined_data[required_topic_id]
 
