@@ -41,7 +41,7 @@ class Merge:
             w = self.get_weight(tag)
             chatnor_score = self.resp_df.iloc[i].Score_ChatNoir
             weighted_scores.append(w*chatnor_score)
-            self.resp_df['Weighted_Score_ChatNoir'] = weighted_scores
+        self.resp_df['Weighted_Score_ChatNoir'] = weighted_scores
 
     def merging(self):
         #update all scores by weights > Weighted_Score_ChatNoir
