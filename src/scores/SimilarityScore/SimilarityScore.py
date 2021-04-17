@@ -100,11 +100,14 @@ class SimilarityScore:
     
     def load_generated_text_for_topic(self, required_topic_id):
         #adding original topic to its generated texts
+        
         dict_combined_data={}
         for topic_id, generated in self.generated_texts.items():
-          origin = topicid_topic[topic_id]
+          print(generated)
+          origin = self.topicid_topic[topic_id]
+          print(origin)
           combined = [ origin + ". " + e for e in generated]
-          dict_combined_data[topic_id] = combined
+          dict_combined_data[topicid] = combined
         
         return dict_combined_data[required_topic_id]
 
