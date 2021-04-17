@@ -63,6 +63,8 @@ class TestChatNoir(TestCase):
             columns=["query",
                      "TrecID",
                      "uuid",
+                     "title",
+                     "snippet",
                      "target_hostname",
                      "Score_ChatNoir"]
         )
