@@ -8,10 +8,6 @@ from itertools import chain
 import pandas as pd
 from pathlib import Path
 
-'''
-topics is a list of all topics
-transformModel is User-Input for which transform model should be used
-'''
 
 #install packages
 from simpletransformers.language_representation import RepresentationModel
@@ -38,23 +34,26 @@ class SimilarityScore:
                 use_cuda=False
             )
           self.transform_model = bert_model
+        
+        path = Path(__file__).parent.joinpath('text_task20/generated_texts.txt')
+        filename=path
+        with open(filename) as f:
+            lines = f.read()
+        local_generated_texts=[]
+        for line in lines.split("="*40 + "\n"):
+            if len(line.replace("\n",""))!=0:
+                local_generated_texts.append([e.replace("\n", "") for e in line.split("\n\n\n")])
+        
+        self.generated_texts={(i+1): local_generated_texts[i] for i in range(0,len(local_generated_texts))}
 
-    def set_topic_ids(self):
-        i = 1
-        topic_ids = []
-        for topic in self.topics:
-          splitdf = self.data[self.data['topic']==topic].reset_index(drop=True)
-          topic_ids.append(len(splitdf.index)*[i])
-          i = i + 1
-        topic_ids = list(chain(*topic_ids))
-        print(topic_ids)
-        return topic_ids
 
     def get_similarity_scores(self):
-        topic_ids = self.set_topic_ids()
+        #topic_ids = self.set_topic_ids()
         similarity_scores = []
         for i in range(0, len(self.data.index)):
-          topic_id = topic_ids[i]
+
+          topic_id = self.data.iloc[i]['TopicID']
+
           doc = self.data.iloc[i]['title'] + self.data.iloc[i]['snippet']
           similarity_score = self.calculate_similarity_for_doc(topic_id, doc)
           similarity_scores.append(similarity_score)
@@ -83,36 +82,29 @@ class SimilarityScore:
 
         similarity_score = sum(scores)/len(scores)
         return similarity_score
+    
     def load_generated_text_for_topic(self, required_topic_id):
         '''
         1. this filename is depend von python script generated_text
         2. transform "topic[i]. generated_text[i][j]" to vector
         3. j= [0,n_samples].
         '''
-        path = Path(__file__).parent.joinpath('text_task20/generated_texts.txt')
-        filename=path
 
-        with open(filename) as f:
-            lines = f.read()
-        generated_texts=[]
-        for line in lines.split("="*40 + "\n"):
-            if len(line.replace("\n",""))!=0:
-                generated_texts.append([e.replace("\n", "") for e in line.split("\n\n\n")])
-        generated_texts={(i+1): generated_texts[i] for i in range(0,len(generated_texts))}
         '''
         1. combine topic and generated text
         2. topic_id: List[query+generated_text[j] for j in [0, n_saples]]
         3. topics = get_titles(file)
         '''
+        #adding original topic to its generated texts
+        topicid_topic = {self.data.iloc[i]['TopicID']:self.data.iloc[i]['topic'] for i in range(0,len(self.data.index))}
+
         dict_combined_data={}
-        topic_id=0
-        for i in range(0,len(self.topics)):
-            topic_id=i+1
-            liste = [self.topics[i]+". "+ e for e in generated_texts[i+1]]
-            dict_combined_data[topic_id] = liste
+        for topicid, generated in self.generated_texts.items():
+          origin = topicid_topic[topicid]
+          combined = [ origin + ". " + e for e in generated]
+          dict_combined_data[topicid] = combined
         
-        generated_texts = dict_combined_data[required_topic_id]
-        return generated_texts
+        return dict_combined_data[required_topic_id]
 
 if __name__ == "__main__":
     
