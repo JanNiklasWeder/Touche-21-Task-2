@@ -35,17 +35,15 @@ class SimilarityScore:
             )
           self.transform_model = bert_model
         
-        #LOAD AUTOMATED GENERATED TEXTS
+        #import in advance automated generated texts for each topic with GPT2-Medium model
         start_TopicID = min(list(self.data['TopicID'].unique()))
         if start_TopicID==1:
-          #task 20
+          #generated texts for topics from task 20
           path = Path(__file__).parent.joinpath('text_task20/generated_texts.txt')
-          print(path)
+          
         else:
-          #task 21
+          #generated texts for topics from task 21
           path = Path(__file__).parent.joinpath('text_task21/generated_texts.txt')
-          print(path)
-
         
         filename=path
         with open(filename) as f:
@@ -57,8 +55,6 @@ class SimilarityScore:
         
         self.generated_texts={(start_TopicID+i): local_generated_texts[i] for i in range(0,len(local_generated_texts))}
         self.topicid_topic = {self.data.iloc[i]['TopicID']:self.data.iloc[i]['topic'] for i in range(0,len(self.data.index))}
-        print(self.topicid_topic)
-        print(len(self.topicid_topic.values()))
         
 
     def get_similarity_scores(self):
