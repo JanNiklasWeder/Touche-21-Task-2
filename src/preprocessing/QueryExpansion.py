@@ -60,21 +60,21 @@ class QueryExpansion:
         if relation:
           result = []
           result = [*result, *self.get_comparation_superlation_nouns_from_original_data()]
-          self.df_queries = pd.concat([self.df_queries, pd.DataFrame(result, columns=['topic', 'query', 'tag'])])
+          self.df_queries = pd.concat([self.df_queries, pd.DataFrame(result, columns=['TopicID','topic', 'query', 'tag'])])
 
         if synonyms:
           result = []
           result = [*result, *self.synonyms()]
-          self.df_queries = pd.concat([self.df_queries, pd.DataFrame(result, columns=['topic', 'query', 'tag'])])
+          self.df_queries = pd.concat([self.df_queries, pd.DataFrame(result, columns=['TopicID','topic', 'query', 'tag'])])
         
         if sensevec:
           result = []
           result = [*result, *self.similarwords_sensevec()]
-          self.df_queries = pd.concat([self.df_queries, pd.DataFrame(result, columns=['topic', 'query', 'tag'])])
+          self.df_queries = pd.concat([self.df_queries, pd.DataFrame(result, columns=['TopicID','topic', 'query', 'tag'])])
         if embedded:
           result = []
           result = [*result, *self.similarwords_wordembedding()]
-          self.df_queries = pd.concat([self.df_queries, pd.DataFrame(result, columns=['topic', 'query', 'tag'])])
+          self.df_queries = pd.concat([self.df_queries, pd.DataFrame(result, columns=['TopicID','topic', 'query', 'tag'])])
 
         return self.df_queries
 
@@ -88,9 +88,11 @@ class QueryExpansion:
         return expanded_queries
     def similarwords_sensevec(self):
         result=[]
-        #print(list(self.df_queries['topic'].unique()))
+        
         for original_query in list(self.df_queries['topic'].unique()):
-            
+
+            original_topicid = self.df_queries[self.df_queries['topic']==original_query].iloc[0]['TopicID']
+
             doc = self.nlp(original_query)
             expanded_queries=[]
             similar_words={}
@@ -124,7 +126,7 @@ class QueryExpansion:
             expanded_queries=self.similarwords_replace(original_query, similar_words)
             i = 1
             for new_query in expanded_queries:
-              result.append([original_query,new_query, 'sensevec_'+str(i)])
+              result.append([original_topicid, original_query,new_query, 'sensevec_'+str(i)])
               i = i +1
         return result
 
@@ -137,6 +139,8 @@ class QueryExpansion:
         result = []
 
         for query in list(self.df_queries['topic'].unique()):
+            original_topicid = self.df_queries[self.df_queries['topic']==query].iloc[0]['TopicID']
+
             new_title = self.remove_punc(query)
             syn_pro_title = list()
             temp = new_title
@@ -149,7 +153,7 @@ class QueryExpansion:
             # print(syn_pro_title)
             # synonyms_by_titles.writelines(" ".join(list(set(syn_pro_title))) + "\n")
             # ToDo temp(org) + syns or only syns?
-            result.append([query, temp + " " + " ".join(list(set(syn_pro_title))), 'syns'])
+            result.append([original_topicid, query, temp + " " + " ".join(list(set(syn_pro_title))), 'syns'])
         return result
 
     def find_syns_word(self, token: str):
@@ -177,6 +181,8 @@ class QueryExpansion:
         result =[]
 
         for query in list(self.df_queries['topic'].unique()):
+            original_topicid = self.df_queries[self.df_queries['topic']==query].iloc[0]['TopicID']
+
             nouns_as_string = []
             doc = self.nlp(query)
             annotations = ['CC', 'CD',
@@ -187,11 +193,13 @@ class QueryExpansion:
             for token in doc:
                 if token.tag_ in annotations:
                     nouns_as_string.append(token.text)
-            result.append([query, ' '.join(nouns_as_string), 'annotation'])
+            result.append([original_topicid, query, ' '.join(nouns_as_string), 'annotation'])
         return result
     def similarwords_wordembedding(self):
         result = []
         for query in list(self.df_queries['topic'].unique()):
+            original_topicid = self.df_queries[self.df_queries['topic']==query].iloc[0]['TopicID']
+
             doc = self.nlp(query)
             #expanded queries
             expanded_queries=[]
@@ -226,7 +234,7 @@ class QueryExpansion:
             
             i = 1
             for new_query in expanded_queries:
-              result.append([query,new_query, 'embedded_'+str(i)])
+              result.append([original_topicid, query,new_query, 'embedded_'+str(i)])
               i = i +1
         return result
 

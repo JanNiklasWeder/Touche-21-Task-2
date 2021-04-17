@@ -12,7 +12,8 @@ import os
 import argparse
 
 from tqdm import tqdm
-
+import re
+clean = re.compile('<.*?>')
 
 def get_titles(file: Path) -> pandas.DataFrame:
     tree = ET.parse(file)
@@ -192,10 +193,14 @@ class ChatNoir:
                 response = self.api(query, querysize)
                 logging.debug(response)
                 for answer in response:
-                    buffer = query, answer['trec_id'], answer['uuid'], answer['target_hostname'], answer['score']
+                    #clean html tags
+                    answer['title'] = re.sub(clean,'',answer['title'])
+                    answer['snippet'] = re.sub(clean,'',answer['snippet'])
+
+                    buffer = query, answer['trec_id'], answer['uuid'], answer['title'], answer['snippet'], answer['target_hostname'], answer['score']
                     answers.append(buffer)
 
-            answer = pandas.DataFrame(answers, columns=['query', 'TrecID', 'uuid', 'target_hostname', 'Score_ChatNoir'])
+            answer = pandas.DataFrame(answers, columns=['query', 'TrecID', 'uuid', 'title', 'snippet', 'target_hostname', 'Score_ChatNoir'])
             result = result.append(answer)
 
             Path.mkdir(save_path.parent, parents=True, exist_ok=True)
