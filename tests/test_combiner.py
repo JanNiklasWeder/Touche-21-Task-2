@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+import traceback
 from pathlib import Path
 from unittest import TestCase
 from unittest.mock import patch
@@ -35,7 +36,7 @@ class TestCombine(TestCase):
                     dry_run=True)
             except Exception as error:
                 run = False
-                msg = error
+                msg = str(error) + "\n" +str(traceback.format_exc())
 
             self.assertTrue(expr=run, msg=msg)
 
@@ -67,7 +68,7 @@ class TestCombine(TestCase):
                     test = True
                 )
             except Exception as error:
-                msg = error
+                msg = str(error) + "\n" +str(traceback.format_exc())
                 run = False
 
             self.assertTrue(expr=run,msg=msg)
