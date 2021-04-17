@@ -31,12 +31,15 @@ class Combine:
 
         self.topics = topics
         self.wD = Path(workingDirectory)
-        self.merged_df= pandas.DataFrame()
-
-        with open("data/noarg_topics.txt") as f:
-            noarg_topics = f.read()
-        self.noargs = [e.strip() for e in noarg_topics.split(",")] #for task 2020 only topic 6 and 13 do not need argument score
         
+        try:
+            with open(self.wD / "data/noarg_topics.txt") as f:
+                noarg_topics = f.read()
+            self.noargs = [e.strip() for e in noarg_topics.split(",")] #for task 2020 only topic 6 and 13 do not need argument score
+        except FileNotFoundError:
+            logging.warning("No noarg_topics.txt found assuming it is empty")
+            self.noargs = []
+
     def preprocess(self, lemma: bool = True):
 
         # ToDo order is not directly changeable
@@ -60,7 +63,7 @@ class Combine:
     def run(self,
             preprocessing: bool = True,
             query_expansion: bool = True,
-            weights: dict = {'original': 5, 'annotation': 4, 'sensevec': 3, 'embedded': 3, 'preprocessing': 2,
+            weights: dict = {'original': 2, 'annotation': 1.5, 'sensevec': 1, 'embedded': 1, 'preprocessing': 1,
                              'syns': 1}, method: str = 'max',
             score_argumentative: bool = True,
             underscore: float = 0.55,
@@ -111,29 +114,20 @@ class Combine:
             
         else:
             df = chatnoir.get_response(self.topics, query_size)
+            df = df.sort_values(by='Score_ChatNoir', ascending=False).reset_index(drop=True)
 
-        """
-        chatnoir = ChatNoir(self.topics, size=100) #topics as dataframe topic, query, tag
-        chatnoir_df = chatnoir.get_response()
+        #Merging responses if multiple trec_ids
+        original_topics = list(self.topics['topic'].unique())
+        df = Merge(original_topics, df, weights, method).merging()
 
-        #MERGING AFTER RESPONSES FOR EACH TOPIC
-        df = Merge(list(self.topics['topic'].unique()), chatnoir_df, weights, method=method).merging() #topics is not self.topics, topics is the list of titles
-       
-        #ARGUMENT SCORES
         if score_argumentative:
-            #MERGED_DF: must have column "needArgument"
-            #needArgument must be added manually.
-            '''
-            for task 2020 only topic 6 and 13 do not need argument score
-            '''
-            df['needArgument'] = [i not in [6,13] for i in range(1,51)] #return True when not 6,13, False otherwise
+            #add "needArgument", needArgument must be added manually.
+            df['needArgument'] = [tp not in self.noargs for tp in list(df['topic'])] #return true if topic not in noargs, otherwise false
             targer_model_name = "classifyWD"
             df = ArgumentScore(df, targer_model_name, underscore).get_argument_score()
 
         if score_similarity:
-            transform_model_name = "gpt"
             df = SimilarityScore(list(self.topics['topic'].unique()), df, transform_model_name) #topics here is the list of orginal titles
-        """
 
         if score_trustworthiness:
             page_rank = OpenPageRank(auth.get_key("OpenPageRank"))
