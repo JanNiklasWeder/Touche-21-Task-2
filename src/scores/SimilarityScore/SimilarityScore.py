@@ -16,7 +16,7 @@ from scipy.spatial import distance
 class SimilarityScore:
     def __init__(self, all_topics: [str], data: pd.DataFrame, transform_model_name: str='gpt'):
       
-        self.data = data
+        self.data = data.reset_index(drop=True)
         self.n_samples = 5
         self.topics = all_topics
         #self.transform_model
@@ -35,7 +35,18 @@ class SimilarityScore:
             )
           self.transform_model = bert_model
         
-        path = Path(__file__).parent.joinpath('text_task20/generated_texts.txt')
+        #LOAD AUTOMATED GENERATED TEXTS
+        start_TopicID = min(list(self.data['TopicID'].unique()))
+        if start_TopicID==1:
+          #task 20
+          path = Path(__file__).parent.joinpath('text_task20/generated_texts.txt')
+          print(path)
+        else:
+          #task 21
+          path = Path(__file__).parent.joinpath('text_task21/generated_texts.txt')
+          print(path)
+
+        
         filename=path
         with open(filename) as f:
             lines = f.read()
@@ -44,20 +55,24 @@ class SimilarityScore:
             if len(line.replace("\n",""))!=0:
                 local_generated_texts.append([e.replace("\n", "") for e in line.split("\n\n\n")])
         
-        self.generated_texts={(i+1): local_generated_texts[i] for i in range(0,len(local_generated_texts))}
-
+        self.generated_texts={(start_TopicID+i): local_generated_texts[i] for i in range(0,len(local_generated_texts))}
+        self.topicid_topic = {self.data.iloc[i]['TopicID']:self.data.iloc[i]['topic'] for i in range(0,len(self.data.index))}
+        print(self.topicid_topic)
+        print(len(self.topicid_topic.values()))
+        
 
     def get_similarity_scores(self):
-        #topic_ids = self.set_topic_ids()
+        
         similarity_scores = []
+
         for i in range(0, len(self.data.index)):
-
           topic_id = self.data.iloc[i]['TopicID']
-
           doc = self.data.iloc[i]['title'] + self.data.iloc[i]['snippet']
           similarity_score = self.calculate_similarity_for_doc(topic_id, doc)
           similarity_scores.append(similarity_score)
+
         self.data['similarity_score'] = similarity_scores
+
         return self.data
 
     def calculate_similarity_for_doc(self, topic_id, doc):
@@ -84,25 +99,12 @@ class SimilarityScore:
         return similarity_score
     
     def load_generated_text_for_topic(self, required_topic_id):
-        '''
-        1. this filename is depend von python script generated_text
-        2. transform "topic[i]. generated_text[i][j]" to vector
-        3. j= [0,n_samples].
-        '''
-
-        '''
-        1. combine topic and generated text
-        2. topic_id: List[query+generated_text[j] for j in [0, n_saples]]
-        3. topics = get_titles(file)
-        '''
         #adding original topic to its generated texts
-        topicid_topic = {self.data.iloc[i]['TopicID']:self.data.iloc[i]['topic'] for i in range(0,len(self.data.index))}
-
         dict_combined_data={}
-        for topicid, generated in self.generated_texts.items():
-          origin = topicid_topic[topicid]
+        for topic_id, generated in self.generated_texts.items():
+          origin = topicid_topic[topic_id]
           combined = [ origin + ". " + e for e in generated]
-          dict_combined_data[topicid] = combined
+          dict_combined_data[topic_id] = combined
         
         return dict_combined_data[required_topic_id]
 
