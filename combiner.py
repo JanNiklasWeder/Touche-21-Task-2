@@ -127,7 +127,7 @@ class Combine:
             df = ArgumentScore(df, targer_model_name, underscore).get_argument_score()
 
         if score_similarity:
-            df = SimilarityScore(list(self.topics['topic'].unique()), df, transform_model_name) #topics here is the list of orginal titles
+            df = SimilarityScore(list(self.topics['topic'].unique()), df, transform_model_name).get_similarity_scores() #topics here is the list of orginal titles
 
         if score_trustworthiness:
             page_rank = OpenPageRank(auth.get_key("OpenPageRank"))
