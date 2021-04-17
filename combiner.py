@@ -31,7 +31,7 @@ class Combine:
 
         self.topics = topics
         self.wD = Path(workingDirectory)
-        
+
         try:
             with open(self.wD / "data/noarg_topics.txt") as f:
                 noarg_topics = f.read()

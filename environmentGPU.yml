@@ -140,6 +140,7 @@ dependencies:
     - wcwidth==0.2.5
     - webencodings==0.5.1
     - widgetsnbextension==3.5.1
+    - wget==3.2
     - sense2vec
     - https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.0.0/en_core_web_md-3.0.0-py3-none-any.whl
 prefix: /home/jan/anaconda3/envs/project
