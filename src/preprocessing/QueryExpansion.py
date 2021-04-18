@@ -10,6 +10,8 @@ from typing import List
 import spacy
 #en_core_web_md
 import string
+from tqdm import tqdm
+
 from nltk.corpus import wordnet
 from spacy.lang.en.stop_words import STOP_WORDS
 import random
@@ -89,7 +91,7 @@ class QueryExpansion:
     def similarwords_sensevec(self):
         result=[]
         
-        for original_query in list(self.df_queries['topic'].unique()):
+        for original_query in tqdm(list(self.df_queries['topic'].unique()), desc="Sensevec progress"):
 
             original_topicid = self.df_queries[self.df_queries['topic']==original_query].iloc[0]['TopicID']
 
@@ -138,7 +140,7 @@ class QueryExpansion:
     def synonyms(self):
         result = []
 
-        for query in list(self.df_queries['topic'].unique()):
+        for query in tqdm(list(self.df_queries['topic'].unique()), desc="Synonyms progress"):
             original_topicid = self.df_queries[self.df_queries['topic']==query].iloc[0]['TopicID']
 
             new_title = self.remove_punc(query)
@@ -180,7 +182,7 @@ class QueryExpansion:
     def get_comparation_superlation_nouns_from_original_data(self):
         result =[]
 
-        for query in list(self.df_queries['topic'].unique()):
+        for query in tqdm(list(self.df_queries['topic'].unique()), desc="Relation progress"):
             original_topicid = self.df_queries[self.df_queries['topic']==query].iloc[0]['TopicID']
 
             nouns_as_string = []
@@ -197,7 +199,7 @@ class QueryExpansion:
         return result
     def similarwords_wordembedding(self):
         result = []
-        for query in list(self.df_queries['topic'].unique()):
+        for query in tqdm(list(self.df_queries['topic'].unique()), desc="Embeddings progress"):
             original_topicid = self.df_queries[self.df_queries['topic']==query].iloc[0]['TopicID']
 
             doc = self.nlp(query)

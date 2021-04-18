@@ -17,6 +17,7 @@ class Compound:
         self.svm = svm
         self.mean_sd = mean_sd
         self.scores = scores
+        logging.info("SVM ready | Using the following Scores:\n"+ str(scores))
 
     @classmethod
     def from_file(cls, unique_str: str, path: Path = Path.cwd() / "data/svm"):
