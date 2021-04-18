@@ -41,10 +41,10 @@ class Merge:
             w = self.get_weight(tag)
             chatnor_score = self.resp_df.iloc[i].Score_ChatNoir
             weighted_scores.append(w*chatnor_score)
-        self.resp_df['Weighted_Score_ChatNoir'] = weighted_scores
+        self.resp_df['Score_ChatNoir_weighted'] = weighted_scores
 
     def merging(self):
-        #update all scores by weights > Weighted_Score_ChatNoir
+        #update all scores by weights > Score_ChatNoir_weighted
         self.update_all_scores_with_weights()
         #columns updated after update_all_scores_with_weights
         column_names = list(self.resp_df.columns)
@@ -62,31 +62,30 @@ class Merge:
             dupl_df = splitdf[splitdf.duplicated(['TrecID'], keep=False)]
 
             if len(dupl_df.index)!=0:
-                dupl_ids = list(splitdf[splitdf.duplicated(['TrecID'], keep=False)]['TrecID'].unique())
+                dupl_ids =  dupl_df['TrecID'].unique()
                 #update query, tag and score
                 merged_rows = []
                 for trecid in dupl_ids:
                     #using Weighted_Score_ChatNoir to select one of duplication
                     dupl_by_id = dupl_df[dupl_df['TrecID']==trecid]
                     if self.method=="max":
-                        max_score = max(list(dupl_by_id['Weighted_Score_ChatNoir']))
-                        max_doc = list(dupl_by_id[dupl_by_id['Weighted_Score_ChatNoir']==max_score].iloc[0].values) #may more then 1 docs with max_score, get the first
+                        max_score = max(list(dupl_by_id['Score_ChatNoir_weighted']))
+                        max_doc = list(dupl_by_id[dupl_by_id['Score_ChatNoir_weighted']==max_score].iloc[0].values) #may more then 1 docs with max_score, get the first
                         merged_rows.append(max_doc)
                     else: #mean
                         from statistics import mean
-                        mean_score = mean(list(dupl_by_id['Weighted_Score_ChatNoir']))
+                        mean_score = mean(list(dupl_by_id['Score_ChatNoir_weighted']))
                         #mean_doc is dictionary
-                        mean_doc = dupl_by_id[dupl_by_id['tag']=='original'].iloc[0].to_dict() #priority response of original query
-                        mean_doc['Weighted_Score_ChatNoir'] = mean_score
+                        mean_doc = dupl_by_id.iloc[0].to_dict() #get information
+                        mean_doc['Score_ChatNoir_weighted'] = mean_score #update score to mean score
                         merged_rows.append(list(mean_doc.values()))
                     
                     #create dataframe to save docs, which are selected from multiple trec_ids
-                    merged_dupl = pandas.DataFrame(merged_rows, columns=column_names)
+                merged_dupl = pandas.DataFrame(merged_rows, columns=column_names)
                     
                     #add non_dupl and merged_dupl to get non_dupl_pro_topic: result of each topic
-                    merged_df_by_topic = pandas.concat([non_dupl, merged_dupl])
-                    
-                    final_merged_df = pandas.concat([final_merged_df,merged_df_by_topic])
+                merged_df_by_topic = pandas.concat([non_dupl, merged_dupl])
+                final_merged_df = pandas.concat([final_merged_df,merged_df_by_topic])
             else:
                 final_merged_df = pandas.concat([final_merged_df,non_dupl])
         return final_merged_df.sort_values(by='Score_ChatNoir', ascending=False).reset_index(drop=True)
