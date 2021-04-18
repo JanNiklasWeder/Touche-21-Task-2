@@ -68,7 +68,7 @@ class SimilarityScore:
           similarity_score = self.calculate_similarity_for_doc(topic_id, doc)
           similarity_scores.append(similarity_score)
 
-        self.data['similarity_score'] = similarity_scores
+        self.data['Score_Similarity'] = similarity_scores
 
         return self.data
 

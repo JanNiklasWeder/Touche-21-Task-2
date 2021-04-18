@@ -26,7 +26,7 @@ class ArgumentScore:
 
     def __init__(self, doc_df: pd.DataFrame, targer_model_name: str, underscore: float):
         
-        self.doc_df = doc_df
+        self.doc_df = doc_df.reset_index(drop=True)
         self.targer_model = targer_model_name
         self.underscore = underscore
         
@@ -71,7 +71,7 @@ class ArgumentScore:
                       argScores.append(avg_argScore) #arg_labels_probas
           else:
               argScores.append(None)
-        self.doc_df['argument_score'] = argScores
+        self.doc_df['Score_Argument'] = argScores
         return self.doc_df
 
     def response_targer_api(self, doc):
