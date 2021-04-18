@@ -28,10 +28,10 @@ class PreProcessing:
                 tmp = tmp + token.lemma_
               else:
                 tmp = tmp + " " + token.lemma_
-            result.append([row['topic'],tmp,'preprocessing'])
+            result.append([row['TopicID'],row['topic'],tmp,'preprocessing'])
 
-        self.querys = pandas.concat([self.querys, pandas.DataFrame(result, columns=['topic', 'query', 'tag'])])
-
+        self.querys = pandas.concat([self.querys, pandas.DataFrame(result, columns=['TopicID','topic', 'query', 'tag'])])
+    '''
     def stopword(self) -> None:
         result = []
 
@@ -40,7 +40,7 @@ class PreProcessing:
             result.append([row['topic']," ".join(title)])
 
         self.querys = pandas.concat([ pandas.DataFrame(result, columns=['topic', 'query']),self.querys ])
-
+    '''
     def getQuery(self):
         return self.querys
 
