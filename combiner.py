@@ -118,43 +118,28 @@ class Combine:
             df = chatnoir.get_response(self.topics, query_size)
             df = df.sort_values(by='Score_ChatNoir', ascending=False).reset_index(drop=True)
 
-        print("start")
-        print(df)
-
         #Merging responses if multiple trec_ids
         original_topics = list(self.topics['topic'].unique())
         df = Merge(original_topics, df, weights, method).merging()
-
-        print("merge")
-        print(df)
-
 
         if score_argumentative:
             #add "needArgument", needArgument must be added manually.
             df['needArgument'] = [tp not in self.noargs for tp in list(df['topic'])] #return true if topic not in noargs, otherwise false
             targer_model_name = "classifyWD"
             df = ArgumentScore(df, targer_model_name, underscore).get_argument_score()
-        print("arg")
-        print(df)
 
         if score_similarity:
             df = SimilarityScore(list(self.topics['topic'].unique()), df, transform_model_name).get_similarity_scores() #topics here is the list of orginal titles
-        print("sim")
-        print(df)
 
         if score_trustworthiness:
             page_rank = OpenPageRank(auth.get_key("OpenPageRank"))
             df['target_hostname'] = df['target_hostname'].str.replace('www\.', '', regex=True)
             df = page_rank.df_add_score(df)
-        print("trust")
-        print(df)
 
         if score_bert:
             df = df_add_text(df)
             bert = Bert(self.wD / "data/bert/")
             df = bert.df_add_score(df)
-        print("bert")
-        print(df)
 
         if dry_run:
             svm.train(df, unique_str, self.wD)
@@ -162,8 +147,6 @@ class Combine:
         else:
             df = svm.df_add_score(df, unique_str, self.wD)
             df2trec.write(df, tag=unique_str)
-        print(df)
-
 
 if __name__ == "__main__":
     import argparse
