@@ -7,6 +7,7 @@ from collections import Counter
 from itertools import chain
 import pandas as pd
 from pathlib import Path
+from tqdm import tqdm
 
 
 #install packages
@@ -61,7 +62,7 @@ class SimilarityScore:
         
         similarity_scores = []
 
-        for i in range(0, len(self.data.index)):
+        for i in tqdm(range(0, len(self.data.index)), desc="Similarity score progress:"):
           topic_id = self.data.iloc[i]['TopicID']
           doc = self.data.iloc[i]['title'] + self.data.iloc[i]['snippet']
           similarity_score = self.calculate_similarity_for_doc(topic_id, doc)

@@ -43,7 +43,6 @@ class Bert:
 
     def df_add_score(self, df: pandas.DataFrame):
         combinations = df[['topic', 'FullText']].drop_duplicates()
-        print(combinations)
 
         for index, row in tqdm(combinations.iterrows(),
                                total=combinations.shape[0],

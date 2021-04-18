@@ -16,9 +16,9 @@ from src.scores.PageRank.OpenPageRank import OpenPageRank
 from src.scores.ArgumentScore.ArgumentScore import ArgumentScore
 from src.scores.SimilarityScore.SimilarityScore import SimilarityScore
 
-
 from src.utility.ChatNoir.querys import ChatNoir, get_titles, df_add_text
 from src.utility.auth.auth import Auth
+from src.utility import df2trec
 
 
 class Combine:
@@ -35,7 +35,8 @@ class Combine:
         try:
             with open(self.wD / "data/noarg_topics.txt") as f:
                 noarg_topics = f.read()
-            self.noargs = [e.strip() for e in noarg_topics.split(",")] #for task 2020 only topic 6 and 13 do not need argument score
+            self.noargs = [e.strip() for e in
+                           noarg_topics.split(",")]  # for task 2020 only topic 6 and 13 do not need argument score
         except FileNotFoundError:
             logging.warning("No noarg_topics.txt found assuming it is empty")
             self.noargs = []
@@ -55,11 +56,12 @@ class Combine:
         self.topics = buffer
         self.topics = self.topics.sort_index()
         self.topics = self.topics.reset_index(drop=True)
-        
-    def query_expansion(self, relation: bool = False, synonyms: bool = False, sensevec: bool=False, embedded: bool=False):
+
+    def query_expansion(self, relation: bool = False, synonyms: bool = False, sensevec: bool = False,
+                        embedded: bool = False):
         expansion = QueryExpansion(self.topics)
-        self.topics = expansion.expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded) 
-        
+        self.topics = expansion.expansion(relation=relation, synonyms=synonyms, sensevec=sensevec, embedded=embedded)
+
     def run(self,
             preprocessing: bool = True,
             query_expansion: bool = True,
@@ -73,9 +75,9 @@ class Combine:
             score_similarity: bool = True,
             score_bert: bool = True,
             dry_run: bool = False,
-            test:bool = True,
+            test: bool = True,
             query_size: int = 100,
-           transform_model_name: str = 'gpt'):
+            transform_model_name: str = 'gpt'):
         pandas.set_option('display.max_columns', None)
 
         if test:
@@ -111,7 +113,7 @@ class Combine:
             qrels = qrels[["TopicID", "TrecID", "qrel"]]
 
             df = pandas.merge(qrels, df, how="inner", on=["TrecID", "TopicID"])
-            
+
         else:
             df = chatnoir.get_response(self.topics, query_size)
             df = df.sort_values(by='Score_ChatNoir', ascending=False).reset_index(drop=True)
@@ -134,21 +136,19 @@ class Combine:
             df['target_hostname'] = df['target_hostname'].str.replace('www\.', '', regex=True)
             df = page_rank.df_add_score(df)
 
-
         if score_bert:
             df = df_add_text(df)
             bert = Bert(self.wD / "data/bert/")
             df = bert.df_add_score(df)
 
         if dry_run:
-            svm.train(df, unique_str,self.wD)
-            print("Finished dry run")
-            return
+            svm.train(df, unique_str, self.wD)
+            logging.info("Finished dry run")
         else:
-            df = svm.df_add_score(df, unique_str,self.wD)
+            df = svm.df_add_score(df, unique_str, self.wD)
+            df2trec.write(df, tag=unique_str)
 
 if __name__ == "__main__":
-
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -186,8 +186,12 @@ if __name__ == "__main__":
     parser.add_argument("-v", "--loglevel", type=str, default="WARNING",
                         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
                         help="Set the detail of the log events (default: %(default)s)")
-    parser.add_argument("--DryRun", action='store_true', default=False,
+    parser.add_argument("-d","--DryRun", action='store_true', default=False,
                         help="Start dry run to train the svm (default: %(default)s)")
+    parser.add_argument("-o", "--output", type=str, default=str(Path.cwd())+"out.trec",
+                        help="File path where the output should be stored (default: %(default)s)")
+    parser.add_argument("-s", "--size", type=int, default=100,
+                        help="Size of the requested reply from ChatNoir (default: %(default)s)")
     args = parser.parse_args()
 
     logging.basicConfig(filename="run.log", level=args.loglevel, filemode='w')
@@ -195,7 +199,6 @@ if __name__ == "__main__":
     wd = os.getcwd()
 
     combiner = Combine(args.Topics, wd)
-
 
     combiner.run(preprocessing=args.Preprocessing,
                  query_expansion=args.QueryExpansion,
@@ -205,4 +208,5 @@ if __name__ == "__main__":
                  underscore=args.Underscore,
                  score_trustworthiness=args.Trustworthiness,
                  score_bert=args.Bert,
-                 dry_run=args.DryRun)
+                 dry_run=args.DryRun,
+                 query_size=args.size)

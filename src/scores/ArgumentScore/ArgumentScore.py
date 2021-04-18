@@ -4,6 +4,9 @@ import json
 import regex as re
 import time
 import pandas as pd
+
+from tqdm import tqdm
+
 #Model Name: targer = classifyWD, classifyNewWD, classifyWD_dep
 
 
@@ -30,7 +33,7 @@ class ArgumentScore:
     def get_argument_score(self):
         argScores = []
 
-        for i in range(0, len(self.doc_df.index)):
+        for i in tqdm(range(0, len(self.doc_df.index)), desc="Argument score progress:"):
           doc = self.doc_df.iloc[i]['title'] + '. ' + self.doc_df.iloc[i]['snippet']
           needArgument = self.doc_df.iloc[i]['needArgument']
 
