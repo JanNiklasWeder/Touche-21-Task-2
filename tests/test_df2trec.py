@@ -4,7 +4,7 @@ from unittest import TestCase
 
 import pandas
 
-from utility.df2trec import write
+from src.utility.df2trec import write
 
 
 class Test(TestCase):

@@ -4,7 +4,6 @@ import tempfile
 import traceback
 from pathlib import Path
 from unittest import TestCase
-from unittest.mock import patch
 
 from combiner import Combine
 
