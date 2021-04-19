@@ -8,6 +8,7 @@ import joblib
 import numpy
 import numpy as np
 import pandas
+from scipy.special import expit
 from sklearn import svm as sklearn_svm
 from tqdm import tqdm
 
@@ -17,7 +18,7 @@ class Compound:
         self.svm = svm
         self.mean_sd = mean_sd
         self.scores = scores
-        logging.info("SVM ready | Using the following Scores:\n"+ str(scores))
+        logging.info("SVM ready | Using the following Scores:\n" + str(scores))
 
     @classmethod
     def from_file(cls, unique_str: str, path: Path = Path.cwd() / "data/svm"):
@@ -55,11 +56,15 @@ class Compound:
         for score in self.scores:
             mean = df[score].mean()
             sd = df[score].std(ddof=0)
-
             frames.append([score, mean, sd])
-            df[score] = (df[score].to_numpy() - mean) / sd
+
+            df[score] = (df[score].to_numpy() - mean)
+            if sd != 0:
+                df[score] = df[score] / sd
 
             df[score].fillna(mean)
+            df[score] = sigmoid(df[score])
+
 
         self.mean_sd = pandas.DataFrame(frames, columns=['score', 'mean', 'sd'])
 
@@ -73,6 +78,7 @@ class Compound:
         self.svm.fit(input, expected)
 
     def predict(self, df: pandas.DataFrame()):
+        print(df)
         df["final"] = numpy.nan
 
         for score in self.scores:
@@ -80,18 +86,29 @@ class Compound:
             mean = row["mean"].values[0]
             sd = row["sd"].values[0]
 
-            df[score] = (df[score].to_numpy() - mean) / sd
+            df[score] = (df[score] - mean)
+            if sd != 0:
+                df[score] = df[score] / sd
 
             df[score].fillna(mean, inplace=True)
+            df[score] = sigmoid(df[score])
 
         for index, row in tqdm(df.iterrows(),
                                total=df.shape[0],
                                desc="Compute final score via SVM:"):
             feature = numpy.array(row[self.scores]).reshape(1, -1)
 
-            df.loc[index, "final"] = self.svm.predict(feature)
+            df.loc[index, "final"] = np.float64(self.svm.predict(feature))
 
         return df
+
+
+def sigmoid(x):
+    return np.where(
+        x >= 0,
+        1 / (1 + np.exp(-x)),
+        np.exp(x) / (1 + np.exp(x))
+    )
 
 
 def train(df: pandas.DataFrame, unique_str: str, path: Path = None):
@@ -101,15 +118,14 @@ def train(df: pandas.DataFrame, unique_str: str, path: Path = None):
     if path is None:
         svm.save(unique_str=unique_str)
     else:
-        svm.save(unique_str=unique_str,path = path)
+        svm.save(unique_str=unique_str, path=path)
 
 
 def df_add_score(df: pandas.DataFrame, unique_str: str, path: Path = None):
-
     if path is None:
         svm = Compound.from_file(unique_str=unique_str)
     else:
-        svm = Compound.from_file(unique_str=unique_str,path = path)
+        svm = Compound.from_file(unique_str=unique_str, path=path)
     output = svm.predict(df)
 
     return output

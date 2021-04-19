@@ -108,7 +108,8 @@ class OpenPageRank():
 
         result = self.get_page_rank(websites)
 
-        result = df.merge(result, how="left", on="target_hostname")
+        print(df)
+        result = pandas.merge(df,result,on="target_hostname", how="left")
         return result
 
 
