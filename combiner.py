@@ -150,6 +150,7 @@ class Combine:
 if __name__ == "__main__":
 
     import argparse
+    import yaml
 
     parser = argparse.ArgumentParser()
     parser.add_argument("Topics", type=str,
@@ -161,13 +162,9 @@ if __name__ == "__main__":
     '''
     NEED WEIGHTS FOR MERGING
     '''
-    parser.add_argument("-W", "--WeightsMerging", type=dict, default={
-        'original': 5,
-        'annotation': 4,
-        'sensevec': 3,
-        'embedded': 3,
-        'preprocessing': 2,
-        'syns': 1},
+    parser.add_argument("-W", "--WeightsMerging", 
+                        type=yaml.load, 
+                        default="{original: 5, annotation: 4, sensevec: 3, embedded: 3, preprocessing: 2, syns: 1}",
                         help="Adding weights for merging responses")
 
     parser.add_argument("-M", "--MergeMethod", type=str, default='max',
