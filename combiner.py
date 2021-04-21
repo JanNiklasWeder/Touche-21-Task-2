@@ -1,7 +1,9 @@
 #!/usr/bin/python
 import logging
 import os
+import zipfile
 from pathlib import Path
+import wget as wget
 
 import pandas
 
@@ -138,7 +140,23 @@ class Combine:
 
         if score_bert:
             df = df_add_text(df)
-            bert = Bert(self.wD / "data/bert/")
+
+            path = self.wD / "data/bert/"
+
+            if not path.is_dir():
+                logging.info("Download of the Bert model this may take a moment.")
+                path.mkdir(parents=True,exist_ok=True)
+                path = path.parent / "bert.zip"
+                wget.download(
+                    "https://cloud.uzi.uni-halle.de/owncloud/index.php/s/Zcz1VnGkJwGSeGo/download?path=%2F&files=",
+                    str(path))
+
+                with zipfile.ZipFile(path, "r") as zip_ref:
+                    zip_ref.extractall(path.parent)
+                path.unlink(missing_ok=True)
+                path = path.parent / "bert"
+
+            bert = Bert(path)
             df = bert.df_add_score(df)
 
         if dry_run:
@@ -154,14 +172,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("Topics", type=str,
                         help="File path to 'topics-task-2.xml'")
-    parser.add_argument("-P", "--Preprocessing", type=bool, default=True,
+    parser.add_argument("-p", "--Preprocessing", action='store_true', default=False,
                         help="Activate the Preprocessing (default: %(default)s)")
-    parser.add_argument("-E", "--QueryExpansion", type=bool, default=True,
+    parser.add_argument("-e", "--QueryExpansion", action='store_true', default=False,
                         help="Activate the QueryExpansion (default: %(default)s)")
     '''
     NEED WEIGHTS FOR MERGING
     '''
-    parser.add_argument("-W", "--WeightsMerging", type=dict, default={
+    parser.add_argument("-w", "--WeightsMerging", type=dict, metavar='', default={
         'original': 5,
         'annotation': 4,
         'sensevec': 3,
@@ -170,30 +188,35 @@ if __name__ == "__main__":
         'syns': 1},
                         help="Adding weights for merging responses")
 
-    parser.add_argument("-M", "--MergeMethod", type=str, default='max',
+    parser.add_argument("-m", "--MergeMethod", type=str, default='max', metavar='',
                         help="Method for merging responses (default: %(default)s)")
 
-    parser.add_argument("-A", "--Argumentative", type=bool, default=True,
+    parser.add_argument("-a", "--Argumentative", action='store_true', default=False,
                         help="Activate the argumentative score (default: %(default)s)")
-    parser.add_argument("-B", "--Bert", action='store_true', default=False,
+
+    parser.add_argument("-b", "--Bert", action='store_true', default=False,
                         help="Activate the computation of a score via Bert (default: %(default)s)")
 
-    parser.add_argument("-U", "--Underscore", type=float, default=0.55,
+    parser.add_argument("-u", "--Underscore", type=float, default=0.55, metavar='',
                         help="Underscore for argument score (default: %(default)s)")
 
-    parser.add_argument("-T", "--Trustworthiness", type=bool, default=True,
+    parser.add_argument("-t", "--Trustworthiness", action='store_true', default=False,
                         help="Activate the Trustworthiness score (default: %(default)s)")
-    parser.add_argument("-v", "--loglevel", type=str, default="WARNING",
+
+    parser.add_argument("-v", "--loglevel", type=str, default="WARNING", metavar='',
                         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
                         help="Set the detail of the log events (default: %(default)s)")
+
     parser.add_argument("-d","--DryRun", action='store_true', default=False,
                         help="Start dry run to train the svm (default: %(default)s)")
-    parser.add_argument("-o", "--output", type=str, default=str(Path.cwd())+"out.trec",
-                        help="File path where the output should be stored (default: %(default)s)")
-    parser.add_argument("-s", "--size", type=int, default=100,
-                        help="Size of the requested reply from ChatNoir (default: %(default)s)")
-    args = parser.parse_args()
 
+    parser.add_argument("-o", "--output", type=str, default=str(Path.cwd())+"out.trec", metavar='',
+                        help="File path where the output should be stored (default: ./out.trec)")
+
+    parser.add_argument("-s", "--size", type=int, default=100, metavar='',
+                        help="Size of the requested reply from ChatNoir (default: %(default)s)")
+
+    args = parser.parse_args()
     logging.basicConfig(filename="run.log", level=args.loglevel, filemode='w')
 
     wd = os.getcwd()

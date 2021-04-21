@@ -8,7 +8,6 @@ import joblib
 import numpy
 import numpy as np
 import pandas
-from scipy.special import expit
 from sklearn import svm as sklearn_svm
 from tqdm import tqdm
 

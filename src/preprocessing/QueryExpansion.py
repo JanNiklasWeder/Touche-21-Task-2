@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
+import logging
 import tarfile
 
 import nltk
 import wget as wget
 
-nltk.download('wordnet')
+
 from nltk.corpus import  wordnet
 from typing import List
 import spacy
@@ -15,6 +16,7 @@ from tqdm import tqdm
 from nltk.corpus import wordnet
 from spacy.lang.en.stop_words import STOP_WORDS
 import random
+random.seed(10)
 import numpy as np
 from itertools import chain
 
@@ -30,6 +32,7 @@ from pathlib import Path
 class QueryExpansion:
 
     def __init__(self, queries: pd.DataFrame, top_syns: int = 5, top_similar: int=2):
+        nltk.download('wordnet')
         self.df_queries = queries
         
         self.nlp = spacy.load("en_core_web_md")
@@ -38,6 +41,7 @@ class QueryExpansion:
         path = Path.cwd() / "data/s2v_reddit_2015_md"
 
         if not path.is_dir():
+            logging.info("Will download s2v_reddit_2015_md this may take a while.")
             path = Path.cwd() / "data/s2v_reddit_2015_md.tar.gz"
 
             wget.download("https://github.com/explosion/sense2vec/releases/download/v1.0.0/s2v_reddit_2015_md.tar.gz",
@@ -46,6 +50,7 @@ class QueryExpansion:
             with tarfile.open(path) as tar:
                 path = path.parent / "s2v_reddit_2015_md"
                 tar.extractall(path)
+            (path.parent / "s2v_reddit_2015_md.tar.gz").unlink(missing_ok=True)
 
         path = path / "s2v_old"
         self.sense = self.nlp.add_pipe("sense2vec").from_disk(path)
