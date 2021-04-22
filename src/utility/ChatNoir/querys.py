@@ -3,34 +3,33 @@ import logging
 import pickle
 import re
 import time
-import requests
 import xml.etree.ElementTree as ET
 from pathlib import Path
-import pandas
 from typing import List
-import os
-import argparse
 
+import pandas
+import requests
 from tqdm import tqdm
-import re
-clean = re.compile('<.*?>')
+
+clean = re.compile("<.*?>")
+
 
 def get_titles(file: Path) -> pandas.DataFrame:
     tree = ET.parse(file)
     root = tree.getroot()
     buffer = []
 
-    for topic in root.iter('topic'):
-        title = topic.find('title').text
-        id = topic.find('number').text
+    for topic in root.iter("topic"):
+        title = topic.find("title").text
+        id = topic.find("number").text
 
-        buffer.append([int(id.strip()),title.strip()])
+        buffer.append([int(id.strip()), title.strip()])
 
-    return pandas.DataFrame(buffer,columns=['TopicID','topic'])
+    return pandas.DataFrame(buffer, columns=["TopicID", "topic"])
 
 
 def uuid2doc(uuid, index: str = "cw12"):
-    url = 'https://www.chatnoir.eu/cache'
+    url = "https://www.chatnoir.eu/cache"
 
     request_data = {
         "uuid": uuid,
@@ -47,7 +46,9 @@ def uuid2doc(uuid, index: str = "cw12"):
             data = requests.get(url, request_data).text
             success = True
         except Exception as str_error:
-            logging.warning("Cannot retrieve Documents. Retrying in %s seconds" % seconds)
+            logging.warning(
+                "Cannot retrieve Documents. Retrying in %s seconds" % seconds
+            )
             logging.warning("Code: %s" % str_error)
 
             time.sleep(seconds)
@@ -59,9 +60,9 @@ def uuid2doc(uuid, index: str = "cw12"):
         if success:
             break
 
-    data = re.sub('<[^>]+>', '', data)
-    data = re.sub('\n', '', data)
-    data = re.sub('&[^;]+;', '', data)
+    data = re.sub("<[^>]+>", "", data)
+    data = re.sub("\n", "", data)
+    data = re.sub("&[^;]+;", "", data)
 
     return data
 
@@ -69,16 +70,16 @@ def uuid2doc(uuid, index: str = "cw12"):
 def uuids2df(uuid: pandas.DataFrame) -> pandas.DataFrame:
     save_path = Path.cwd() / "data/ChatNoirCache"
 
-    missing = uuid['uuid'].tolist()
+    missing = uuid["uuid"].tolist()
     save = None
 
     if Path(save_path / "uuid.pickle").is_file():
         logging.info("Loading text save")
         save = pandas.read_csv(save_path / "uuid.csv")
 
-        with open(save_path / "uuid.pickle", 'rb') as filehandle:
+        with open(save_path / "uuid.pickle", "rb") as filehandle:
             saved = pickle.load(filehandle)
-            #saved = save['uuid'].unique().tolist()
+            # saved = save['uuid'].unique().tolist()
 
         missing = [x for x in missing if x not in saved]
         if len(missing) > 0:
@@ -89,7 +90,7 @@ def uuids2df(uuid: pandas.DataFrame) -> pandas.DataFrame:
     for uuid in tqdm(missing, desc="ChatNoir query docs progress"):
         frames.append([uuid, uuid2doc(uuid)])
 
-    result = pandas.DataFrame(frames, columns=['uuid', 'FullText'])
+    result = pandas.DataFrame(frames, columns=["uuid", "FullText"])
 
     if save is not None:
         result = pandas.concat([save, result]).reset_index(drop=True)
@@ -97,15 +98,14 @@ def uuids2df(uuid: pandas.DataFrame) -> pandas.DataFrame:
     if len(missing) > 0:
         result.to_csv(path_or_buf=save_path / "uuid.csv", index=False)
 
-        with open(save_path / "uuid.pickle", 'wb') as filehandle:
-            pickle.dump(result['uuid'].tolist(), filehandle)
-
+        with open(save_path / "uuid.pickle", "wb") as filehandle:
+            pickle.dump(result["uuid"].tolist(), filehandle)
 
     return result
 
 
 def df_add_text(df: pandas.DataFrame):
-    uuids = pandas.DataFrame(df['uuid'].unique(), columns=["uuid"])
+    uuids = pandas.DataFrame(df["uuid"].unique(), columns=["uuid"])
 
     result = uuids2df(uuids)
 
@@ -114,14 +114,13 @@ def df_add_text(df: pandas.DataFrame):
 
 
 class ChatNoir:
-
     def __init__(self, key: str, working_directory: Path, corpus: List[str] = ["cw12"]):
         self.key = key
         self.corpus = corpus
         self.workingDir = working_directory / "data/ChatNoirCache"
 
     def api(self, data: str, size: int) -> dict:
-        url = 'https://www.chatnoir.eu/api/v1/_search'
+        url = "https://www.chatnoir.eu/api/v1/_search"
 
         request_data = {
             "apikey": self.key,
@@ -136,16 +135,18 @@ class ChatNoir:
         for attempt in range(10):  #
             success = False
             try:
-                response = (requests.post(url, data=request_data))
-                output = response.json()['results']
+                response = requests.post(url, data=request_data)
+                output = response.json()["results"]
                 success = True
             except Exception as str_error:
-                logging.warning("Cannot retrieve Documents. Retrying in %s seconds" % seconds)
+                logging.warning(
+                    "Cannot retrieve Documents. Retrying in %s seconds" % seconds
+                )
                 logging.warning("Code: %s" % str_error)
 
                 try:
                     logging.warning("Response was : %s" % response)
-                except:
+                except NameError:
                     continue
 
                 time.sleep(seconds)
@@ -160,7 +161,7 @@ class ChatNoir:
         return output
 
     def get_response(self, data: pandas.DataFrame, querysize: int) -> pandas.DataFrame:
-        querys = data['query'].tolist()
+        querys = data["query"].tolist()
 
         querysize = str(querysize)
 
@@ -172,7 +173,7 @@ class ChatNoir:
             logging.info("Loading ChatNoir query size: %s" % querysize)
             result = pandas.read_csv(save_path)
 
-            with open(save_list, 'rb') as filehandle:
+            with open(save_list, "rb") as filehandle:
                 saved = pickle.load(filehandle)
 
             missing = [x for x in querys if x not in saved]
@@ -193,24 +194,43 @@ class ChatNoir:
                 response = self.api(query, querysize)
                 logging.debug(response)
                 for answer in response:
-                    #clean html tags
-                    answer['title'] = re.sub(clean,'',answer['title'])
-                    answer['snippet'] = re.sub(clean,'',answer['snippet'])
+                    # clean html tags
+                    answer["title"] = re.sub(clean, "", answer["title"])
+                    answer["snippet"] = re.sub(clean, "", answer["snippet"])
 
-                    buffer = query, answer['trec_id'], answer['uuid'], answer['title'], answer['snippet'], answer['target_hostname'], answer['score']
+                    buffer = (
+                        query,
+                        answer["trec_id"],
+                        answer["uuid"],
+                        answer["title"],
+                        answer["snippet"],
+                        answer["target_hostname"],
+                        answer["score"],
+                    )
                     answers.append(buffer)
 
-            answer = pandas.DataFrame(answers, columns=['query', 'TrecID', 'uuid', 'title', 'snippet', 'target_hostname', 'Score_ChatNoir'])
+            answer = pandas.DataFrame(
+                answers,
+                columns=[
+                    "query",
+                    "TrecID",
+                    "uuid",
+                    "title",
+                    "snippet",
+                    "target_hostname",
+                    "Score_ChatNoir",
+                ],
+            )
             result = result.append(answer)
 
             Path.mkdir(save_path.parent, parents=True, exist_ok=True)
             result.to_csv(path_or_buf=save_path, index=False)
 
-            with open(save_list, 'wb') as filehandle:
+            with open(save_list, "wb") as filehandle:
                 pickle.dump(querys, filehandle)
 
         # removing unrequested queries
-        result = result[result['query'].isin(querys)]
+        result = result[result["query"].isin(querys)]
 
         data = data.merge(result, how="inner", on="query")
         return data

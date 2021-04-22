@@ -159,11 +159,12 @@ class Combine:
             bert = Bert(path)
             df = bert.df_add_score(df)
 
+        path = self.wD /"data/svm"
         if dry_run:
-            svm.train(df, unique_str, self.wD)
+            svm.train(df, unique_str, path)
             logging.info("Finished dry run")
         else:
-            df = svm.df_add_score(df, unique_str, self.wD)
+            df = svm.df_add_score(df, unique_str, path)
             df2trec.write(df, tag=unique_str)
 
 if __name__ == "__main__":

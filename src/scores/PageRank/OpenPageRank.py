@@ -1,33 +1,28 @@
 #!/usr/bin/python
 import logging
-import os
 import pickle
 import time
 from pathlib import Path
 from typing import List, Tuple
 
-import numpy
 import pandas
 import requests
 
 
-class OpenPageRank():
-
+class OpenPageRank:
     def __init__(self, key: [str], wd: Path = Path.cwd()):
         self.wd = wd / "data/PageRank"
         Path.mkdir(self.wd, parents=True, exist_ok=True)
         self.key = key
-        self.url = 'https://openpagerank.com/api/v1.0/getPageRank'
+        self.url = "https://openpagerank.com/api/v1.0/getPageRank"
 
-    def request_page_rank(self, website: List[str]) -> List[Tuple[str,int]]:
+    def request_page_rank(self, website: List[str]) -> List[Tuple[str, int]]:
 
         request_data = {
             "domains[]": set(website),
         }
 
-        headers = {
-            'API-OPR': self.key
-        }
+        headers = {"API-OPR": self.key}
 
         output = []
         seconds = 10
@@ -37,10 +32,13 @@ class OpenPageRank():
             success = False
             try:
                 output = requests.get(self.url, params=request_data, headers=headers)
-                output = output.json()['response']
+                output = output.json()["response"]
                 success = True
             except Exception as str_error:
-                print("[ERROR] Cannot reach OpenPageRank. Retrying in %s seconds" % seconds)
+                print(
+                    "[ERROR] Cannot reach OpenPageRank. Retrying in %s seconds"
+                    % seconds
+                )
                 print("[ERROR] Code: %s" % str_error)
                 time.sleep(seconds)
                 seconds += seconds
@@ -53,21 +51,21 @@ class OpenPageRank():
 
         result = []
         for i in output:
-            result.append([i['domain'],i['page_rank_decimal']])
+            result.append([i["domain"], i["page_rank_decimal"]])
 
         return result
 
     def get_page_rank(self, websites: pandas.DataFrame) -> pandas.DataFrame:
         save_path = self.wd
 
-        missing = websites['target_hostname'].tolist()
+        missing = websites["target_hostname"].tolist()
         save = None
 
         if Path(save_path / "websites.pickle").is_file():
             logging.info("Loading PageRank save")
-            save = pandas.read_csv(save_path/"data.csv")
+            save = pandas.read_csv(save_path / "data.csv")
 
-            with open(save_path / "websites.pickle", 'rb') as filehandle:
+            with open(save_path / "websites.pickle", "rb") as filehandle:
                 saved = pickle.load(filehandle)
 
             missing = [x for x in missing if x not in saved]
@@ -77,19 +75,19 @@ class OpenPageRank():
         frames = []
 
         for index in range(0, len(missing), 100):
-            request = missing[index:index + 100]
+            request = missing[index : index + 100]
             frames = [*frames, *self.request_page_rank(request)]
 
-        result = pandas.DataFrame(frames, columns=['target_hostname', 'Score_PageRank'])
+        result = pandas.DataFrame(frames, columns=["target_hostname", "Score_PageRank"])
 
         if save is not None:
             result = pandas.concat([save, result]).reset_index(drop=True)
 
-        if len(missing)> 0:
-            result.to_csv(path_or_buf=save_path/"data.csv", index=False)
+        if len(missing) > 0:
+            result.to_csv(path_or_buf=save_path / "data.csv", index=False)
 
-            with open(save_path / "websites.pickle", 'wb') as filehandle:
-                pickle.dump(websites['target_hostname'].tolist(), filehandle)
+            with open(save_path / "websites.pickle", "wb") as filehandle:
+                pickle.dump(websites["target_hostname"].tolist(), filehandle)
 
         return result
 
@@ -104,16 +102,12 @@ class OpenPageRank():
         Returns:
             extended DataFrame (DataFrame): DataFrame that has been extended by the 'Score_PageRank' column.
         """
-        websites = pandas.DataFrame(df['target_hostname'].unique(),columns=["target_hostname"])
+        websites = pandas.DataFrame(
+            df["target_hostname"].unique(), columns=["target_hostname"]
+        )
 
         result = self.get_page_rank(websites)
 
         print(df)
-        result = pandas.merge(df,result,on="target_hostname", how="left")
+        result = pandas.merge(df, result, on="target_hostname", how="left")
         return result
-
-
-if __name__ == "__main__":
-    print({"google.de"})
-    buffer = OpenPageRank("ckc840wswkg8kckwswk8w8k8wwsgwkocsok0kcok")
-    print(buffer.get_page_rank({"google.de","google.com"}))

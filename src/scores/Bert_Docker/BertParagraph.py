@@ -4,7 +4,7 @@ import gc
 import multiprocessing
 
 import wandb
-from simpletransformers.classification import (ClassificationModel, ClassificationArgs)
+from simpletransformers.classification import ClassificationModel, ClassificationArgs
 from pathlib import Path
 from datetime import datetime
 from typing import List
@@ -42,13 +42,13 @@ def get_titles(file):
     root = tree.getroot()
     buffer = []
 
-    for title in root.iter('title'):
+    for title in root.iter("title"):
         buffer.append(title.text.strip())
     return buffer
 
 
 def simpleSearch(data, size):
-    url = 'https://www.chatnoir.eu/api/v1/_search'
+    url = "https://www.chatnoir.eu/api/v1/_search"
 
     request_data = {
         "apikey": "--",
@@ -61,7 +61,7 @@ def simpleSearch(data, size):
 
 
 def retrievingFullDocuments(uuid, index):
-    url = 'https://www.chatnoir.eu/cache'
+    url = "https://www.chatnoir.eu/cache"
 
     request_data = {
         "uuid": uuid,
@@ -71,9 +71,9 @@ def retrievingFullDocuments(uuid, index):
     }
 
     data = requests.get(url, request_data).text
-    data = re.sub('<[^>]+>', '', data)
-    data = re.sub('\n', '', data)
-    data = re.sub('&[^;]+;', '', data)
+    data = re.sub("<[^>]+>", "", data)
+    data = re.sub("\n", "", data)
+    data = re.sub("&[^;]+;", "", data)
 
     # print(data)
     return data
@@ -87,8 +87,15 @@ def kFoldSweep(num_folds):
         q = multiprocessing.Queue()
         p = multiprocessing.Process(
             target=Bert,
-            kwargs=dict(sweep_q=sweep_q, worker_q=q, DataSet=topic_df, testTopicIDs=i, workingDirectory=wd, qrels=qrels,
-                        ID_UUID=ID_UUID)
+            kwargs=dict(
+                sweep_q=sweep_q,
+                worker_q=q,
+                DataSet=topic_df,
+                testTopicIDs=i,
+                workingDirectory=wd,
+                qrels=qrels,
+                ID_UUID=ID_UUID,
+            ),
         )
         p.start()
         workers.append(Worker(queue=q, process=p))
@@ -135,19 +142,19 @@ def kFoldSweep(num_folds):
 
             if true == 0:
                 if pred == 0:
-                    accuracy = + 1
+                    accuracy = +1
 
             elif true == 1:
                 if pred == 1:
-                    accuracy = + 1
+                    accuracy = +1
                 elif pred == 2:
-                    accuracy = + .8
+                    accuracy = +0.8
 
             else:  # true == 2
                 if pred == 1:
-                    accuracy = + .8
+                    accuracy = +0.8
                 elif pred == 2:
-                    accuracy = + 1
+                    accuracy = +1
 
         if accuracy == 0:
             return accuracy
@@ -156,16 +163,28 @@ def kFoldSweep(num_folds):
 
 
 class Bert:
-    def __init__(self, sweep_q, worker_q, DataSet, testTopicIDs: List[int], name: str, workingDirectory: Path,
-                 qrels: Path, ID_UUID: Path, WandBKey: str):
+    def __init__(
+        self,
+        sweep_q,
+        worker_q,
+        DataSet,
+        testTopicIDs: List[int],
+        name: str,
+        workingDirectory: Path,
+        qrels: Path,
+        ID_UUID: Path,
+        WandBKey: str,
+    ):
 
-        os.environ['WANDB_API_KEY'] = WandBKey
+        os.environ["WANDB_API_KEY"] = WandBKey
         reset_wandb_env()
 
         self.cuda_available = torch.cuda.is_available()
         self.wD = workingDirectory
         self.name = name
-        qrels = pandas.read_csv(qrels, sep=" ", names=["TopicID", "Spacer", "trec_id", "Score"])
+        qrels = pandas.read_csv(
+            qrels, sep=" ", names=["TopicID", "Spacer", "trec_id", "Score"]
+        )
         IDS = pandas.read_csv(ID_UUID, names=["uuid", "trec_id"])
 
         buffer = pandas.merge(IDS, qrels, how="inner", on=["trec_id"])
@@ -178,25 +197,39 @@ class Bert:
         logging.info("Prepearing test data")
 
         if isinstance(testTopicIDs, int):
-            self.test_df = pandas.DataFrame(self.data.loc[self.data['TopicID'] == testTopicIDs])
+            self.test_df = pandas.DataFrame(
+                self.data.loc[self.data["TopicID"] == testTopicIDs]
+            )
         else:
             for i in testTopicIDs:
-                buffer = self.data.loc[self.data['TopicID'] == i]
+                buffer = self.data.loc[self.data["TopicID"] == i]
                 frames.append(buffer)
 
             self.test_df = pandas.concat(frames)
-        self.train_df = pandas.concat([self.data, self.test_df]).drop_duplicates(keep=False)
+        self.train_df = pandas.concat([self.data, self.test_df]).drop_duplicates(
+            keep=False
+        )
         self.model = self.train(WandBKey)
 
-    def __init__(self, DataSet, testTopicIDs: List[int], name: str, workingDirectory: Path, qrels: Path, ID_UUID: Path,
-                 WandBKey: str):
-        os.environ['WANDB_API_KEY'] = WandBKey
+    def __init__(
+        self,
+        DataSet,
+        testTopicIDs: List[int],
+        name: str,
+        workingDirectory: Path,
+        qrels: Path,
+        ID_UUID: Path,
+        WandBKey: str,
+    ):
+        os.environ["WANDB_API_KEY"] = WandBKey
         reset_wandb_env()
 
         self.cuda_available = torch.cuda.is_available()
         self.wD = workingDirectory
         self.name = name
-        qrels = pandas.read_csv(qrels, sep=" ", names=["TopicID", "Spacer", "trec_id", "Score"])
+        qrels = pandas.read_csv(
+            qrels, sep=" ", names=["TopicID", "Spacer", "trec_id", "Score"]
+        )
         IDS = pandas.read_csv(ID_UUID, names=["uuid", "trec_id"])
 
         buffer = pandas.merge(IDS, qrels, how="inner", on=["trec_id"])
@@ -209,14 +242,18 @@ class Bert:
         logging.info("Prepearing test data")
 
         if isinstance(testTopicIDs, int):
-            self.test_df = pandas.DataFrame(self.data.loc[self.data['TopicID'] == testTopicIDs])
+            self.test_df = pandas.DataFrame(
+                self.data.loc[self.data["TopicID"] == testTopicIDs]
+            )
         else:
             for i in testTopicIDs:
-                buffer = self.data.loc[self.data['TopicID'] == i]
+                buffer = self.data.loc[self.data["TopicID"] == i]
                 frames.append(buffer)
 
             self.test_df = pandas.concat(frames)
-        self.train_df = pandas.concat([self.data, self.test_df]).drop_duplicates(keep=False)
+        self.train_df = pandas.concat([self.data, self.test_df]).drop_duplicates(
+            keep=False
+        )
         self.model = self.train(WandBKey)
 
         # ToDo init for loading model without training
@@ -224,19 +261,23 @@ class Bert:
         # check if UUID-Text exists else create
 
     def uuidToText(self, data: pandas.DataFrame):
-        if Path('res/UUID-Text.csv').is_file():
+        if Path("res/UUID-Text.csv").is_file():
             print("[INFO] UUID-Text.csv found. Loading...")
-            Documents = pandas.read_csv('res/UUID-Text.csv', names=['uuid', 'trec_id', 'FullText'])
+            Documents = pandas.read_csv(
+                "res/UUID-Text.csv", names=["uuid", "trec_id", "FullText"]
+            )
         else:
-            print("[INFO] UUID-Text.csv not found at './res/touche20-task2-docs-ID-UUID'. Creating ...")
+            print(
+                "[INFO] UUID-Text.csv not found at './res/touche20-task2-docs-ID-UUID'. Creating ..."
+            )
             fullText = []
 
             print("[INFO] Retrieving Documents")
             size = data.shape[0]
 
             for index, row in data.iterrows():
-                uuid = row['uuid']
-                trec_id = row['trec_id']
+                uuid = row["uuid"]
+                trec_id = row["trec_id"]
 
                 for x in range(10):  #
                     try:
@@ -257,36 +298,51 @@ class Bert:
                 if index % 100 == 0:
                     print("[PROGRESS] ", index, " of ", size)
 
-            Documents = pandas.DataFrame(fullText, columns=['uuid', 'trec_id', 'FullText'])
+            Documents = pandas.DataFrame(
+                fullText, columns=["uuid", "trec_id", "FullText"]
+            )
             print("[INFO] Saving UUID-Text.csv")
             Documents.to_csv(path_or_buf="./res/UUID-Text.csv", index=False)
 
         return pandas.merge(Documents, data, how="inner", on=["trec_id", "uuid"])
 
-    def train(self, WandBKey: str, freezeEncoder: bool = True, modelName: str = "bert",
-              modelType: str = "bert-base-cased"):
+    def train(
+        self,
+        WandBKey: str,
+        freezeEncoder: bool = True,
+        modelName: str = "bert",
+        modelType: str = "bert-base-cased",
+    ):
         # wandb.init(
         #    project="CrossValidation",
         #    notes="Test-Topic :" + self.name)
 
-        train_df = self.train_df[['Topic', 'FullText', 'Score']]
-        train_df.rename(columns={'Topic': "text_a", 'FullText': "text_b", 'Score': "labels"}, inplace=True)
+        train_df = self.train_df[["Topic", "FullText", "Score"]]
+        train_df.rename(
+            columns={"Topic": "text_a", "FullText": "text_b", "Score": "labels"},
+            inplace=True,
+        )
 
         # calculating pos_weights based on trainings data
-        pos_weights = train_df['labels'].value_counts(normalize=True).sort_index()
+        pos_weights = train_df["labels"].value_counts(normalize=True).sort_index()
         logging.info("Frequencies are:\n" + pos_weights)
         pos_weights = pos_weights.tolist()
         pos_weights = [1 - element for element in pos_weights]
         logging.info("Pos_weights are:\n" + pos_weights)
 
-        test_df = self.test_df[['Topic', 'FullText', 'Score']]
-        test_df.rename(columns={'Topic': "text_a", 'FullText': "text_b", 'Score': "labels"}, inplace=True)
+        test_df = self.test_df[["Topic", "FullText", "Score"]]
+        test_df.rename(
+            columns={"Topic": "text_a", "FullText": "text_b", "Score": "labels"},
+            inplace=True,
+        )
 
         print(train_df)
         print(test_df)
 
         timeStamp = datetime.now()
-        savePath = "/app/Bert_Docker/saves/CrossValidationTopic" + self.name  # + timeStamp.strftime("%d-%m-%Y_%H:%M")
+        savePath = (
+            "/app/Bert_Docker/saves/CrossValidationTopic" + self.name
+        )  # + timeStamp.strftime("%d-%m-%Y_%H:%M")
 
         # create Folder if not exists
         output_dir = Path(savePath)
@@ -307,10 +363,7 @@ class Bert:
         if freezeEncoder:
             model_args.train_custom_parameters_only = True
             model_args.custom_parameter_groups = [
-                {
-                    "params": ["classifier.weight", "classifier.bias"],
-                    "lr": 1e-4,
-                },
+                {"params": ["classifier.weight", "classifier.bias"], "lr": 1e-4,},
             ]
 
         # Create a ClassificationModel
@@ -321,7 +374,8 @@ class Bert:
             use_cuda=self.cuda_available,
             num_labels=3,
             pos_weight=pos_weights,
-            args=model_args)
+            args=model_args,
+        )
         # model = ClassificationModel("bert", "./saves/")
 
         exit(1)
@@ -335,23 +389,14 @@ class Bert:
         print("[INFO] Evaluating the model")
         time.sleep(5)
 
-        result, model_outputs, wrong_predictions = model.eval_model(
-            test_df
-        )
+        result, model_outputs, wrong_predictions = model.eval_model(test_df)
 
         output = []
         for index, row in test_df.iterrows():
-            predictions, raw_outputs = model.predict(
-                [
-                    [
-                        row['text_a'],
-                        row['text_b'],
-                    ]
-                ]
-            )
+            predictions, raw_outputs = model.predict([[row["text_a"], row["text_b"],]])
             output.append(predictions)
 
-        test_df['predictions'] = output
+        test_df["predictions"] = output
         print(type(output))
         # model.save_model(savePath)
         savePath = savePath + "/data"
@@ -375,12 +420,7 @@ class Bert:
         output = []
         for index, row in data.iterrows():
             predictions, raw_outputs = self.model.predict(
-                [
-                    [
-                        row['Topic'],
-                        row['FullText'],
-                    ]
-                ]
+                [[row["Topic"], row["FullText"],]]
             )
 
             row["BertScore"] = predictions
@@ -389,11 +429,7 @@ class Bert:
 
 
 def use_bert(**kwargs):
-    run = wandb.init(
-        project="CrossValidation",
-        notes="Test-Topic : " + i,
-        reinit=True
-    )
+    run = wandb.init(project="CrossValidation", notes="Test-Topic : " + i, reinit=True)
 
     model = Bert(**kwargs)
     del model
@@ -405,15 +441,23 @@ if __name__ == "__main__":
     # Prepearing CrossValidation
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("Topics", type=str,
-                        help="File path to 'topics-task-2.xml'")
-    parser.add_argument("Qrels", type=str,
-                        help="File path to 'touche2020-task2-relevance-withbaseline.qrels'")
-    parser.add_argument("ID_UUID", type=str,
-                        help="File path to 'touche2020-task2-docs-ID_UUID'")
-    parser.add_argument("-v", "--loglevel", type=str, default="WARNING",
-                        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-                        help="Set the shown log events (default: %(default)s)")
+    parser.add_argument("Topics", type=str, help="File path to 'topics-task-2.xml'")
+    parser.add_argument(
+        "Qrels",
+        type=str,
+        help="File path to 'touche2020-task2-relevance-withbaseline.qrels'",
+    )
+    parser.add_argument(
+        "ID_UUID", type=str, help="File path to 'touche2020-task2-docs-ID_UUID'"
+    )
+    parser.add_argument(
+        "-v",
+        "--loglevel",
+        type=str,
+        default="WARNING",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        help="Set the shown log events (default: %(default)s)",
+    )
 
     args = parser.parse_args()
     logging.basicConfig(level=args.loglevel)
@@ -422,7 +466,7 @@ if __name__ == "__main__":
     wd = wd.parent
 
     auth = Auth(wd)
-    os.environ['WANDB_API_KEY'] = auth.get_key("WandB")
+    os.environ["WANDB_API_KEY"] = auth.get_key("WandB")
 
     Worker = collections.namedtuple("Worker", ("queue", "process"))
     WorkerInitData = collections.namedtuple(
@@ -438,33 +482,42 @@ if __name__ == "__main__":
         topic_df.append(buffer)
         id = id + 1
 
-    topic_df = pandas.DataFrame(topic_df, columns=['TopicID', 'Topic'])
+    topic_df = pandas.DataFrame(topic_df, columns=["TopicID", "Topic"])
     name = "CrossValidationTopic"
     qrels = args.Qrels
     ID_UUID = args.ID_UUID
     WandBKey = auth.get_key("WandB")
 
     for i in range(1, 51):
-        multiprocessing.set_start_method('spawn')
+        multiprocessing.set_start_method("spawn")
         q = multiprocessing.Queue()
         p = multiprocessing.Process(
             target=Bert,
-            kwargs={"DataSet": topic_df,
-                    "testTopicIDs": i,
-                    "name": name + str(i),
-                    "workingDirectory": wd,
-                    "qrels": qrels,
-                    "ID_UUID": ID_UUID,
-                    "WandBKey": WandBKey})
+            kwargs={
+                "DataSet": topic_df,
+                "testTopicIDs": i,
+                "name": name + str(i),
+                "workingDirectory": wd,
+                "qrels": qrels,
+                "ID_UUID": ID_UUID,
+                "WandBKey": WandBKey,
+            },
+        )
         p.start()
-        logging.info("Started run with test topic : "+ str(i))
+        logging.info("Started run with test topic : " + str(i))
         p.join()
         p.close()
 
         print(i)
-        with Bert(DataSet=topic_df, testTopicIDs=i, name=name + str(i), workingDirectory=wd, qrels=qrels,
-                  ID_UUID=ID_UUID,
-                  WandBKey=WandBKey):
+        with Bert(
+            DataSet=topic_df,
+            testTopicIDs=i,
+            name=name + str(i),
+            workingDirectory=wd,
+            qrels=qrels,
+            ID_UUID=ID_UUID,
+            WandBKey=WandBKey,
+        ):
             time.sleep(1)
 
         gc.collect()
