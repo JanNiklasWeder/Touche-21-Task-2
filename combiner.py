@@ -79,7 +79,8 @@ class Combine:
             dry_run: bool = False,
             test: bool = True,
             query_size: int = 100,
-            transform_model_name: str = 'gpt'):
+            transform_model_name: str = 'gpt',
+            out_file: Path = None):
         pandas.set_option('display.max_columns', None)
 
         if test:
@@ -167,7 +168,10 @@ class Combine:
             logging.info("Finished dry run")
         else:
             df = svm.df_add_score(df, unique_str, path)
-            df2trec.write(df, tag=unique_str, path=self.wD)
+            if out_file is None:
+                df2trec.write(df, tag=unique_str, path=self.wD / "out.trec")
+            else:
+                df2trec.write(df, tag=unique_str, path=out_file)
 
 
 if __name__ == "__main__":
