@@ -1,5 +1,5 @@
-[![linter](https://github.com/JanNiklasWeder/Touche-21-Task-2/actions/workflows/linter.yml/badge.svg)](https://github.com/JanNiklasWeder/Touche-21-Task-2/actions/workflows/linter.yml)
 [![Tests](https://github.com/JanNiklasWeder/Touche-21-Task-2/actions/workflows/main.yml/badge.svg)](https://github.com/JanNiklasWeder/Touche-21-Task-2/actions/workflows/main.yml)
+[![linter](https://github.com/JanNiklasWeder/Touche-21-Task-2/actions/workflows/linter.yml/badge.svg)](https://github.com/JanNiklasWeder/Touche-21-Task-2/actions/workflows/linter.yml)
 
 # ...
 A ranking pipeline for the shared touch Task 2: Argument Retrieval for Comparative Questions. 

@@ -167,7 +167,7 @@ class Combine:
             logging.info("Finished dry run")
         else:
             df = svm.df_add_score(df, unique_str, path)
-            df2trec.write(df, tag=unique_str)
+            df2trec.write(df, tag=unique_str, path=self.wD)
 
 
 if __name__ == "__main__":
