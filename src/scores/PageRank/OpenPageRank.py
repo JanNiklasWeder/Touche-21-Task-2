@@ -75,7 +75,7 @@ class OpenPageRank:
         frames = []
 
         for index in range(0, len(missing), 100):
-            request = missing[index : index + 100]
+            request = missing[index: index + 100]
             frames = [*frames, *self.request_page_rank(request)]
 
         result = pandas.DataFrame(frames, columns=["target_hostname", "Score_PageRank"])
@@ -92,6 +92,7 @@ class OpenPageRank:
         return result
 
     def df_add_score(self, df: pandas.DataFrame):
+
         """
         Returns a DataFrame extended by the 'Score_PageRank' column. This column contains the OpenPageRank. As input
         a DataFrame with the column 'target_hostname' is expected, which must contain the corresponding domain name.
@@ -108,6 +109,5 @@ class OpenPageRank:
 
         result = self.get_page_rank(websites)
 
-        print(df)
         result = pandas.merge(df, result, on="target_hostname", how="left")
         return result

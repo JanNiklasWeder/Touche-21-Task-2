@@ -78,7 +78,6 @@ class Compound:
         self.svm.fit(input, expected)
 
     def predict(self, df: pandas.DataFrame()):
-        print(df)
         df["final"] = numpy.nan
 
         for score in self.scores:

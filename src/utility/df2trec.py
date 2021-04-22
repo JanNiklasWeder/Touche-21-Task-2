@@ -21,6 +21,7 @@ def write(
 
     while any(ties):
         df.loc[ties, "final"] = numpy.nextafter(df.loc[ties, "final"], numpy.NINF)
+        ties = df.duplicated(subset=["final"])
 
     df.sort_values(["TopicID", "order"], ascending=True)
 

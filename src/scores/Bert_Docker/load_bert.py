@@ -28,7 +28,7 @@ class Bert:
         )
 
     def predict(self, topic: str, text: str):
-        prediction, raw_output = self.model.predict([[topic, text, ]])
+        prediction, raw_output = self.model.predict([[topic, text]])
 
         logging.info("Raw prediction was : " + str(raw_output))
         return prediction
@@ -37,9 +37,9 @@ class Bert:
         combinations = df[["topic", "FullText"]].drop_duplicates()
 
         for index, row in tqdm(
-                combinations.iterrows(),
-                total=combinations.shape[0],
-                desc="Bert score progress:",
+            combinations.iterrows(),
+            total=combinations.shape[0],
+            desc="Bert score progress:",
         ):
             f = io.StringIO()
             with redirect_stderr(f):
@@ -47,5 +47,5 @@ class Bert:
                     row["topic"], row["FullText"]
                 )
 
-        result = df.merge(combinations, how="left", on=["topic", "FullText"])
+        result = pandas.merge(df, combinations, on=["topic", "FullText"], how="left")
         return result
