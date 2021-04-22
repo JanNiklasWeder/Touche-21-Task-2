@@ -1,19 +1,18 @@
 #!/usr/bin/python
 import io
 import logging
-from contextlib import redirect_stdout, redirect_stderr
+from contextlib import redirect_stderr
 from pathlib import Path
 
+import pandas
 import torch
+from simpletransformers.classification import ClassificationModel
 from simpletransformers.config.model_args import ClassificationArgs
 from tqdm import tqdm
 
 logging.basicConfig(level=logging.WARNING)
 transformers_logger = logging.getLogger("transformers")
 transformers_logger.setLevel(logging.WARNING)
-
-import pandas
-from simpletransformers.classification import ClassificationModel
 
 
 class Bert:
@@ -29,27 +28,24 @@ class Bert:
         )
 
     def predict(self, topic: str, text: str):
-        prediction, raw_output = self.model.predict(
-            [
-                [
-                    topic,
-                    text,
-                ]
-            ]
-        )
+        prediction, raw_output = self.model.predict([[topic, text]])
 
         logging.info("Raw prediction was : " + str(raw_output))
         return prediction
 
     def df_add_score(self, df: pandas.DataFrame):
-        combinations = df[['topic', 'FullText']].drop_duplicates()
+        combinations = df[["topic", "FullText"]].drop_duplicates()
 
-        for index, row in tqdm(combinations.iterrows(),
-                               total=combinations.shape[0],
-                               desc="Bert score progress:"):
+        for index, row in tqdm(
+            combinations.iterrows(),
+            total=combinations.shape[0],
+            desc="Bert score progress:",
+        ):
             f = io.StringIO()
             with redirect_stderr(f):
-                combinations.loc[index, 'Score_Bert'] = self.predict(row["topic"], row["FullText"])
+                combinations.loc[index, "Score_Bert"] = self.predict(
+                    row["topic"], row["FullText"]
+                )
 
-        result = df.merge(combinations, how="left", on=["topic", "FullText"])
+        result = pandas.merge(df, combinations, on=["topic", "FullText"], how="left")
         return result

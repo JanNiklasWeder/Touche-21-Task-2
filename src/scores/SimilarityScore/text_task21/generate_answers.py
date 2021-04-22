@@ -10,29 +10,33 @@ import model, sample, encoder
 import xml.etree.ElementTree as ET
 import time
 
-n_topics=50
+n_topics = 50
+
+
 def get_titles():
-    file="src/topics-task-2.xml"
+    file = "src/topics-task-2.xml"
     tree = ET.parse(file)
     root = tree.getroot()
     buffer = []
-    i=1
-    for title in root.iter('title'):
-        if i<=int(n_topics):
+    i = 1
+    for title in root.iter("title"):
+        if i <= int(n_topics):
             buffer.append(title.text.strip())
-        i=i+1
+        i = i + 1
     return buffer
-#seed 
+
+
+# seed
 def interact_model(
-    model_name='355M',
-    seed=5, 
+    model_name="355M",
+    seed=5,
     nsamples=3,
     batch_size=1,
     length=100,
     temperature=0.5,
     top_k=40,
     top_p=0.95,
-    models_dir='models',
+    models_dir="models",
 ):
     """
     Interactively run the model
@@ -61,56 +65,63 @@ def interact_model(
 
     enc = encoder.get_encoder(model_name, models_dir)
     hparams = model.default_hparams()
-    with open(os.path.join(models_dir, model_name, 'hparams.json')) as f:
+    with open(os.path.join(models_dir, model_name, "hparams.json")) as f:
         hparams.override_from_dict(json.load(f))
 
     if length is None:
         length = hparams.n_ctx // 2
     elif length > hparams.n_ctx:
-        raise ValueError("Can't get samples longer than window size: %s" % hparams.n_ctx)
+        raise ValueError(
+            "Can't get samples longer than window size: %s" % hparams.n_ctx
+        )
 
     with tf.Session(graph=tf.Graph()) as sess:
         context = tf.placeholder(tf.int32, [batch_size, None])
         np.random.seed(seed)
         tf.set_random_seed(seed)
         output = sample.sample_sequence(
-            hparams=hparams, length=length,
+            hparams=hparams,
+            length=length,
             context=context,
             batch_size=batch_size,
-            temperature=temperature, top_k=top_k, top_p=top_p
+            temperature=temperature,
+            top_k=top_k,
+            top_p=top_p,
         )
 
         saver = tf.train.Saver()
         ckpt = tf.train.latest_checkpoint(os.path.join(models_dir, model_name))
         saver.restore(sess, ckpt)
 
-        topicid=1
+        topicid = 1
         data = get_titles()
         print("got data")
         generated_data = {}
-        generated_file = open('src/generated/generated_texts.txt', 'w')
+        generated_file = open("src/generated/generated_texts.txt", "w")
         for raw_text in data:
             samples = []
             while not raw_text:
-                print('Prompt should not be empty!')
+                print("Prompt should not be empty!")
                 raw_text = input("Model prompt >>> ")
             context_tokens = enc.encode(raw_text)
             generated = 0
             for _ in range(nsamples // batch_size):
-                out = sess.run(output, feed_dict={
-                    context: [context_tokens for _ in range(batch_size)]
-                })[:, len(context_tokens):]
+                out = sess.run(
+                    output,
+                    feed_dict={context: [context_tokens for _ in range(batch_size)]},
+                )[:, len(context_tokens) :]
                 for i in range(batch_size):
                     generated += 1
                     text = enc.decode(out[i])
                     print("=" * 40 + " SAMPLE " + str(generated) + " " + "=" * 40)
                     print(text)
                     samples.append(text)
-            generated_file.write('\n'.join(map(str,samples)) + '\n' + '='*40)            
+            generated_file.write("\n".join(map(str, samples)) + "\n" + "=" * 40)
             generated_data[topicid] = samples
             topicid = topicid + 1
             print("=" * 80)
-    #return generated_data    
-if __name__ == '__main__':
-    fire.Fire(interact_model)
+    # return generated_data
 
+
+if __name__ == "__main__":
+    fire.Fire(interact_model)

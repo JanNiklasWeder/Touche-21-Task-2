@@ -14,7 +14,7 @@ import torch
 from typing import List
 
 import wandb
-from simpletransformers.classification import (ClassificationModel, ClassificationArgs)
+from simpletransformers.classification import ClassificationModel, ClassificationArgs
 import pandas
 import xml.etree.ElementTree as ET
 
@@ -37,23 +37,23 @@ def accuracy_score(true_in, pred_in):
 
         if true == 0:
             if pred == 0:
-                accuracy = + 1
+                accuracy = +1
             elif pred == 1:
-                accuracy = + .1
+                accuracy = +0.1
 
         elif true == 1:
             if pred == 1:
-                accuracy = + 1
+                accuracy = +1
             elif pred == 2:
-                accuracy = + .8
+                accuracy = +0.8
             else:
-                accuracy = + .1
+                accuracy = +0.1
 
         else:  # true == 2
             if pred == 1:
-                accuracy = + .8
+                accuracy = +0.8
             elif pred == 2:
-                accuracy = + 1
+                accuracy = +1
 
     if accuracy == 0:
         return accuracy
@@ -66,13 +66,13 @@ def get_titles(file):
     root = tree.getroot()
     buffer = []
 
-    for title in root.iter('title'):
+    for title in root.iter("title"):
         buffer.append(title.text.strip())
     return buffer
 
 
 def retrievingFullDocuments(uuid, index):
-    url = 'https://www.chatnoir.eu/cache'
+    url = "https://www.chatnoir.eu/cache"
 
     request_data = {
         "uuid": uuid,
@@ -82,27 +82,31 @@ def retrievingFullDocuments(uuid, index):
     }
 
     data = requests.get(url, request_data).text
-    data = re.sub('<[^>]+>', '', data)
-    data = re.sub('\n', '', data)
-    data = re.sub('&[^;]+;', '', data)
+    data = re.sub("<[^>]+>", "", data)
+    data = re.sub("\n", "", data)
+    data = re.sub("&[^;]+;", "", data)
 
     return data
 
 
 def uuidToText(data: pandas.DataFrame):
-    if Path('res/UUID-Text.csv').is_file():
+    if Path("res/UUID-Text.csv").is_file():
         print("[INFO] UUID-Text.csv found. Loading...")
-        Documents = pandas.read_csv('res/UUID-Text.csv', names=['uuid', 'trec_id', 'FullText'])
+        Documents = pandas.read_csv(
+            "res/UUID-Text.csv", names=["uuid", "trec_id", "FullText"]
+        )
     else:
-        print("[INFO] UUID-Text.csv not found at './res/touche20-task2-docs-ID-UUID'. Creating ...")
+        print(
+            "[INFO] UUID-Text.csv not found at './res/touche20-task2-docs-ID-UUID'. Creating ..."
+        )
         fullText = []
 
         print("[INFO] Retrieving Documents")
         size = data.shape[0]
 
         for index, row in data.iterrows():
-            uuid = row['uuid']
-            trec_id = row['trec_id']
+            uuid = row["uuid"]
+            trec_id = row["trec_id"]
 
             for x in range(10):  #
                 try:
@@ -123,51 +127,68 @@ def uuidToText(data: pandas.DataFrame):
             if index % 100 == 0:
                 print("[PROGRESS] ", index, " of ", size)
 
-        Documents = pandas.DataFrame(fullText, columns=['uuid', 'trec_id', 'FullText'])
+        Documents = pandas.DataFrame(fullText, columns=["uuid", "trec_id", "FullText"])
         print("[INFO] Saving UUID-Text.csv")
         Documents.to_csv(path_or_buf="./res/UUID-Text.csv", index=False)
 
     return pandas.merge(Documents, data, how="inner", on=["trec_id", "uuid"])
 
 
-def split_data(data: pandas.DataFrame, testTopicID) -> (pandas.DataFrame,pandas.DataFrame, List[float]):
+def split_data(
+    data: pandas.DataFrame, testTopicID
+) -> (pandas.DataFrame, pandas.DataFrame, List[float]):
 
     frames = []
     if isinstance(testTopicID, int):
-        test_df = pandas.DataFrame(data.loc[data['TopicID'] == testTopicID])
+        test_df = pandas.DataFrame(data.loc[data["TopicID"] == testTopicID])
     else:
         for i in testTopicID:
-            buffer = data.loc[data['TopicID'] == i]
+            buffer = data.loc[data["TopicID"] == i]
             frames.append(buffer)
 
         test_df = pandas.concat(frames)
 
     train_df = pandas.concat([data, test_df]).drop_duplicates(keep=False)
 
-    train_df = train_df[['Topic', 'FullText', 'Score']]
-    train_df.rename(columns={'Topic': "text_a", 'FullText': "text_b", 'Score': "labels"}, inplace=True)
-    test_df = test_df[['Topic', 'FullText', 'Score']]
-    test_df.rename(columns={'Topic': "text_a", 'FullText': "text_b", 'Score': "labels"}, inplace=True)
+    train_df = train_df[["Topic", "FullText", "Score"]]
+    train_df.rename(
+        columns={"Topic": "text_a", "FullText": "text_b", "Score": "labels"},
+        inplace=True,
+    )
+    test_df = test_df[["Topic", "FullText", "Score"]]
+    test_df.rename(
+        columns={"Topic": "text_a", "FullText": "text_b", "Score": "labels"},
+        inplace=True,
+    )
 
     # calculating pos_weights based on trainings data
-    pos_weights = train_df['labels'].value_counts(normalize=True).sort_index()
-    logging.info('Frequencies are:\n {}'.format(pos_weights.to_string()))
+    pos_weights = train_df["labels"].value_counts(normalize=True).sort_index()
+    logging.info("Frequencies are:\n {}".format(pos_weights.to_string()))
     pos_weights = pos_weights.tolist()
     pos_weights = [1 - element for element in pos_weights]
-    logging.info("Pos_weights are:\n{}".format(' '.join(map(str, pos_weights))))
+    logging.info("Pos_weights are:\n{}".format(" ".join(map(str, pos_weights))))
 
     return train_df, test_df, pos_weights
 
 
-def train(train_df: pandas.DataFrame, test_df: pandas.DataFrame, save_dir: str, project_name: str, pos_weights: List[float] = None, testTopicID: int = None, use_custom_accuracy: bool = False,
-          use_early_stopping: bool = False, freeze_encoder: bool = True):
+def train(
+    train_df: pandas.DataFrame,
+    test_df: pandas.DataFrame,
+    save_dir: str,
+    project_name: str,
+    pos_weights: List[float] = None,
+    testTopicID: int = None,
+    use_custom_accuracy: bool = False,
+    use_early_stopping: bool = False,
+    freeze_encoder: bool = True,
+):
 
     if testTopicID is None:
         save_path = Path(save_dir) / Path(project_name) / Path("Topic" + "undefined")
     else:
-        save_path = Path(save_dir) / Path(project_name) / Path("Topic" + str(testTopicID))
-
-
+        save_path = (
+            Path(save_dir) / Path(project_name) / Path("Topic" + str(testTopicID))
+        )
 
     model_args = ClassificationArgs()
     model_args.num_train_epochs = 30
@@ -195,10 +216,7 @@ def train(train_df: pandas.DataFrame, test_df: pandas.DataFrame, save_dir: str, 
     if freeze_encoder:
         model_args.train_custom_parameters_only = True
         model_args.custom_parameter_groups = [
-            {
-                "params": ['classifier.weight', 'classifier.bias'],
-                "lr": 1e-5,
-            },
+            {"params": ["classifier.weight", "classifier.bias"], "lr": 1e-5,},
         ]
 
     # Create a ClassificationModel
@@ -209,7 +227,8 @@ def train(train_df: pandas.DataFrame, test_df: pandas.DataFrame, save_dir: str, 
             "bert-base-cased",
             use_cuda=torch.cuda.is_available(),
             num_labels=3,
-            args=model_args)
+            args=model_args,
+        )
     else:
         model = ClassificationModel(
             "bert",
@@ -217,7 +236,8 @@ def train(train_df: pandas.DataFrame, test_df: pandas.DataFrame, save_dir: str, 
             use_cuda=torch.cuda.is_available(),
             num_labels=3,
             weight=pos_weights,
-            args=model_args)
+            args=model_args,
+        )
 
     # Train the model
     logging.info("Starting training")
@@ -250,21 +270,14 @@ def train(train_df: pandas.DataFrame, test_df: pandas.DataFrame, save_dir: str, 
     save.mkdir(parents=True, exist_ok=True)
 
     for index, row in test_df.iterrows():
-        predictions, raw_outputs = model.predict(
-            [
-                [
-                    row['text_a'],
-                    row['text_b'],
-                ]
-            ]
-        )
+        predictions, raw_outputs = model.predict([[row["text_a"], row["text_b"],]])
 
         output.append(predictions[0])
 
     save = save_path / "hanging1"
     save.mkdir(parents=True, exist_ok=True)
     logging.info("Saving train and test data")
-    test_df['predictions'] = output
+    test_df["predictions"] = output
     train_df.to_csv(path_or_buf=save_path / "train.csv", index=True)
     test_df.to_csv(path_or_buf=save_path / "test.csv", index=True)
     logging.info("Finisched")
@@ -276,7 +289,7 @@ def use_bert(**kwargs):
     run = wandb.init(
         project=kwargs.get("project_name"),
         notes="Test-Topic : " + str(kwargs.get("testTopicID")),
-        reinit=True
+        reinit=True,
     )
 
     train(**kwargs)
@@ -284,8 +297,6 @@ def use_bert(**kwargs):
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
     gc.collect()
-
-
 
 
 if __name__ == "__main__":
@@ -297,14 +308,16 @@ if __name__ == "__main__":
     name = "other"
 
     current_dir = Path.cwd()
-    subprocess.call(['chmod', '-R', '777', current_dir])
+    subprocess.call(["chmod", "-R", "777", current_dir])
     topics = current_dir / topics
     qrels = current_dir / qrels
     ID_UUID = current_dir / ID_UUID
     save_dir = current_dir / save_dir
     auth = Auth(current_dir.parent)
     keyChatNoir = auth.get_key("WandB")
-    logging.basicConfig(filename=current_dir / 'run.log', encoding='utf-8', level=logging.DEBUG)
+    logging.basicConfig(
+        filename=current_dir / "run.log", encoding="utf-8", level=logging.DEBUG
+    )
 
     topics = get_titles(topics)
     id = 1
@@ -314,46 +327,60 @@ if __name__ == "__main__":
         topic_df.append(buffer)
         id = id + 1
 
-    topic_df = pandas.DataFrame(topic_df, columns=['TopicID', 'Topic'])
-    qrels = pandas.read_csv(qrels, sep=" ", names=["TopicID", "Spacer", "trec_id", "Score"])
+    topic_df = pandas.DataFrame(topic_df, columns=["TopicID", "Topic"])
+    qrels = pandas.read_csv(
+        qrels, sep=" ", names=["TopicID", "Spacer", "trec_id", "Score"]
+    )
     IDS = pandas.read_csv(ID_UUID, names=["uuid", "trec_id"])
     buffer = pandas.merge(IDS, qrels, how="inner", on=["trec_id"])
     buffer = pandas.merge(buffer, topic_df, how="inner", on=["TopicID"])
     data = uuidToText(buffer)
 
     WandBKey = auth.get_key("WandB")
-    os.environ['WANDB_API_KEY'] = WandBKey
-    multiprocessing.set_start_method('spawn')
+    os.environ["WANDB_API_KEY"] = WandBKey
+    multiprocessing.set_start_method("spawn")
 
-    #prepare first datasets
+    # prepare first datasets
     gpu_lock = multiprocessing.Lock()
-    train_df, test_df, pos_weights = split_data(data,1)
-    p_old = multiprocessing.Process(target=use_bert,
-                                    kwargs={"train_df": train_df,
-                                            "test_df": test_df,
-                                            "pos_weights": pos_weights,
-                                            "testTopicID": i,
-                                            "save_dir": save_dir,
-                                            "project_name": name})
+    train_df, test_df, pos_weights = split_data(data, 1)
+    p_old = multiprocessing.Process(
+        target=use_bert,
+        kwargs={
+            "train_df": train_df,
+            "test_df": test_df,
+            "pos_weights": pos_weights,
+            "testTopicID": i,
+            "save_dir": save_dir,
+            "project_name": name,
+        },
+    )
 
     for i in range(30, 51):
-        p_new = multiprocessing.Process(target=use_bert,
-                                    kwargs={"train_df": train_df,
-                                            "test_df": test_df,
-                                            "pos_weights": pos_weights,
-                                            "testTopicID": i,
-                                            "save_dir": save_dir,
-                                            "project_name": name})
+        p_new = multiprocessing.Process(
+            target=use_bert,
+            kwargs={
+                "train_df": train_df,
+                "test_df": test_df,
+                "pos_weights": pos_weights,
+                "testTopicID": i,
+                "save_dir": save_dir,
+                "project_name": name,
+            },
+        )
         p_new.start()
-        train_df, test_df, pos_weights= split_data(data, i+1)
+        train_df, test_df, pos_weights = split_data(data, i + 1)
         p_old.join()
         gpu_lock.release()
 
         gc.collect()
-        use_bert(kwargs={"data": data,
-                         "testTopicID": i,
-                         "save_dir": save_dir,
-                         "project_name": name})
+        use_bert(
+            kwargs={
+                "data": data,
+                "testTopicID": i,
+                "save_dir": save_dir,
+                "project_name": name,
+            }
+        )
         print(i)
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
