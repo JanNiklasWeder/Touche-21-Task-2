@@ -69,15 +69,16 @@ class TestCombine(TestCase):
                     test=True
                 )
 
-                data = pandas.read_csv(directory / "out.trec", delim_whitespace=True,
-                                       names=["TopicID", "spacer", "TrecID", "rank", "score", "name"])
-                self.assertTrue(expr=data["TrecID"].is_unique, msg="Duplicated TrecIDs")
-                self.assertTrue(expr=data["rank"].is_unique, msg="Identical ranks")
-
             except Exception as error:
                 msg = str(error) + "\n" + str(traceback.format_exc())
                 run = False
 
             self.assertTrue(expr=run, msg=msg)
+
+            data = pandas.read_csv(directory / "out.trec", delim_whitespace=True,
+                                   names=["TopicID", "spacer", "TrecID", "rank", "score", "name"])
+            
+            self.assertTrue(expr=data["TrecID"].is_unique, msg="Duplicated TrecIDs")
+            self.assertTrue(expr=data["score"].is_unique, msg="Identical ranks")
 
             shutil.rmtree(input.parent / "data", ignore_errors=True)
