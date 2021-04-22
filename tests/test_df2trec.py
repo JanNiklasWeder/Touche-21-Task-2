@@ -11,10 +11,10 @@ class Test(TestCase):
     def test_write(self):
 
         example_df = pandas.DataFrame(
-            [["1","clueweb1","4"],
-            ["1","clueweb2","2"],
-            ["2","clueweb3","1"],
-            ["2","clueweb4","2"]]
+            [["1","clueweb1","4.0"],
+            ["1","clueweb2","2.0"],
+            ["2","clueweb3","1.0"],
+            ["2","clueweb4","2.0"]]
             ,columns=["TopicID",
                      "TrecID",
                      "final"]

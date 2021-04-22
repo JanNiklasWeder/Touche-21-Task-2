@@ -141,7 +141,7 @@ class Combine:
             df = page_rank.df_add_score(df)
 
         if score_bert:
-            df = df_add_text(df)
+            df = df_add_text(df,self.wD)
 
             path = self.wD / "data/bert/"
 

@@ -67,8 +67,9 @@ def uuid2doc(uuid, index: str = "cw12"):
     return data
 
 
-def uuids2df(uuid: pandas.DataFrame) -> pandas.DataFrame:
-    save_path = Path.cwd() / "data/ChatNoirCache"
+def uuids2df(uuid: pandas.DataFrame, path: Path = Path.cwd()) -> pandas.DataFrame:
+    save_path = Path(path) / "data/ChatNoirCache"
+    save_path.mkdir(exist_ok=True, parents=True)
 
     missing = uuid["uuid"].tolist()
     save = None
@@ -104,10 +105,10 @@ def uuids2df(uuid: pandas.DataFrame) -> pandas.DataFrame:
     return result
 
 
-def df_add_text(df: pandas.DataFrame):
+def df_add_text(df: pandas.DataFrame, path: Path = Path.cwd()):
     uuids = pandas.DataFrame(df["uuid"].unique(), columns=["uuid"])
 
-    result = uuids2df(uuids)
+    result = uuids2df(uuids, path)
 
     result = df.merge(result, how="left", on="uuid")
     return result

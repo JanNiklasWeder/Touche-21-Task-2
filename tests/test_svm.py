@@ -49,9 +49,9 @@ class TestCompound(TestCase):
         SVM = svm.Compound.new()
 
         df = pandas.DataFrame([[5, 5], [4, 4], [3, 3]], columns=["Score_Test", "qrel"])
-        expected = pandas.DataFrame([[1.224745, 5, 4.9],
-                                     [0, 4, 4],
-                                     [-1.224745, 3, 3.1]],
+        expected = pandas.DataFrame([[0.7728974805643157, 5, 4.9],
+                                     [0.5, 4, 4],
+                                     [0.2271025194356842, 3, 3.1]],
                                     columns=["Score_Test", "qrel", "final"])
 
         SVM.train(df)
@@ -75,9 +75,9 @@ class Test(TestCase):
 
     def test_df_add_score(self):
         df = pandas.DataFrame([[5, 5], [4, 4], [3, 3]], columns=["Score_Test", "qrel"])
-        expected = pandas.DataFrame([[1.224745, 5, 4.9],
-                                     [0, 4, 4],
-                                     [-1.224745, 3, 3.1]],
+        expected = pandas.DataFrame([[0.7728974805643157, 5, 4.9],
+                                     [0.5, 4, 4],
+                                     [0.2271025194356842, 3, 3.1]],
                                     columns=["Score_Test", "qrel", "final"])
 
         with tempfile.TemporaryDirectory() as directory:
