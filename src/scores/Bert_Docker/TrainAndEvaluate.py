@@ -74,12 +74,7 @@ def get_titles(file):
 def retrievingFullDocuments(uuid, index):
     url = "https://www.chatnoir.eu/cache"
 
-    request_data = {
-        "uuid": uuid,
-        "index": index,
-        "raw": "raw",
-        "plain": "plain",
-    }
+    request_data = {"uuid": uuid, "index": index, "raw": "raw", "plain": "plain"}
 
     data = requests.get(url, request_data).text
     data = re.sub("<[^>]+>", "", data)
@@ -216,7 +211,7 @@ def train(
     if freeze_encoder:
         model_args.train_custom_parameters_only = True
         model_args.custom_parameter_groups = [
-            {"params": ["classifier.weight", "classifier.bias"], "lr": 1e-5,},
+            {"params": ["classifier.weight", "classifier.bias"], "lr": 1e-5}
         ]
 
     # Create a ClassificationModel
@@ -270,7 +265,7 @@ def train(
     save.mkdir(parents=True, exist_ok=True)
 
     for index, row in test_df.iterrows():
-        predictions, raw_outputs = model.predict([[row["text_a"], row["text_b"],]])
+        predictions, raw_outputs = model.predict([[row["text_a"], row["text_b"]]])
 
         output.append(predictions[0])
 

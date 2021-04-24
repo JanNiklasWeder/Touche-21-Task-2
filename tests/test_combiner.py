@@ -18,8 +18,11 @@ class TestCombine(TestCase):
             directory = Path(directory)
             (directory / "data").mkdir()
             shutil.copy2(input / "keys.csv", directory / "data/keys.csv")
-            shutil.copy2(Path(__file__).parent.parent / "data/touche2020-task2-relevance-withbaseline.qrels",
-                         directory / "data/touche2020-task2-relevance-withbaseline.qrels")
+            shutil.copy2(
+                Path(__file__).parent.parent
+                / "data/touche2020-task2-relevance-withbaseline.qrels",
+                directory / "data/touche2020-task2-relevance-withbaseline.qrels",
+            )
 
             combiner = Combine(input / "topics-task-2.xml", directory)
 
@@ -34,7 +37,8 @@ class TestCombine(TestCase):
                     score_trustworthiness=True,
                     score_similarity=True,
                     score_bert=True,
-                    dry_run=True)
+                    dry_run=True,
+                )
             except Exception as error:
                 run = False
                 msg = str(error) + "\n" + str(traceback.format_exc())
@@ -48,13 +52,15 @@ class TestCombine(TestCase):
                 combiner.run(
                     preprocessing=True,
                     query_expansion=True,
-                    weights={'original': 5,
-                             'annotation': 4,
-                             'sensevec': 3,
-                             'embedded': 3,
-                             'preprocessing': 2,
-                             'syns': 1},
-                    method='max',
+                    weights={
+                        "original": 5,
+                        "annotation": 4,
+                        "sensevec": 3,
+                        "embedded": 3,
+                        "preprocessing": 2,
+                        "syns": 1,
+                    },
+                    method="max",
                     score_argumentative=True,
                     underscore=0.55,
                     score_trustworthiness=True,
@@ -66,7 +72,7 @@ class TestCombine(TestCase):
                     score_similarity=True,
                     score_bert=True,
                     dry_run=False,
-                    test=True
+                    test=True,
                 )
 
             except Exception as error:
@@ -75,9 +81,12 @@ class TestCombine(TestCase):
 
             self.assertTrue(expr=run, msg=msg)
 
-            data = pandas.read_csv(directory / "out.trec", delim_whitespace=True,
-                                   names=["TopicID", "spacer", "TrecID", "rank", "score", "name"])
-            
+            data = pandas.read_csv(
+                directory / "out.trec",
+                delim_whitespace=True,
+                names=["TopicID", "spacer", "TrecID", "rank", "score", "name"],
+            )
+
             self.assertTrue(expr=data["TrecID"].is_unique, msg="Duplicated TrecIDs")
             self.assertTrue(expr=data["score"].is_unique, msg="Identical ranks")
 

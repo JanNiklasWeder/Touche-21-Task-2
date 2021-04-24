@@ -49,10 +49,10 @@ class TestCompound(TestCase):
         SVM = svm.Compound.new()
 
         df = pandas.DataFrame([[5, 5], [4, 4], [3, 3]], columns=["Score_Test", "qrel"])
-        expected = pandas.DataFrame([[0.7728974805643157, 5, 4.9],
-                                     [0.5, 4, 4],
-                                     [0.2271025194356842, 3, 3.1]],
-                                    columns=["Score_Test", "qrel", "final"])
+        expected = pandas.DataFrame(
+            [[0.7728974805643157, 5, 4.9], [0.5, 4, 4], [0.2271025194356842, 3, 3.1]],
+            columns=["Score_Test", "qrel", "final"],
+        )
 
         SVM.train(df)
 
@@ -69,16 +69,22 @@ class Test(TestCase):
             svm.train(df, "test", directory)
             filename = directory / "test"
 
-            self.assertTrue(expr=(filename / "svm.joblib").exists(), msg="svm was not saved")
-            self.assertTrue(expr=(filename / "mean_sd.csv").exists(), msg="svm was not saved")
-            self.assertTrue(expr=(filename / "scores.pickle").exists(), msg="svm was not saved")
+            self.assertTrue(
+                expr=(filename / "svm.joblib").exists(), msg="svm was not saved"
+            )
+            self.assertTrue(
+                expr=(filename / "mean_sd.csv").exists(), msg="svm was not saved"
+            )
+            self.assertTrue(
+                expr=(filename / "scores.pickle").exists(), msg="svm was not saved"
+            )
 
     def test_df_add_score(self):
         df = pandas.DataFrame([[5, 5], [4, 4], [3, 3]], columns=["Score_Test", "qrel"])
-        expected = pandas.DataFrame([[0.7728974805643157, 5, 4.9],
-                                     [0.5, 4, 4],
-                                     [0.2271025194356842, 3, 3.1]],
-                                    columns=["Score_Test", "qrel", "final"])
+        expected = pandas.DataFrame(
+            [[0.7728974805643157, 5, 4.9], [0.5, 4, 4], [0.2271025194356842, 3, 3.1]],
+            columns=["Score_Test", "qrel", "final"],
+        )
 
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)

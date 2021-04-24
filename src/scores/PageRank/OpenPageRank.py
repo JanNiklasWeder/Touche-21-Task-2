@@ -18,9 +18,7 @@ class OpenPageRank:
 
     def request_page_rank(self, website: List[str]) -> List[Tuple[str, int]]:
 
-        request_data = {
-            "domains[]": set(website),
-        }
+        request_data = {"domains[]": set(website)}
 
         headers = {"API-OPR": self.key}
 
@@ -75,7 +73,7 @@ class OpenPageRank:
         frames = []
 
         for index in range(0, len(missing), 100):
-            request = missing[index: index + 100]
+            request = missing[index : index + 100]
             frames = [*frames, *self.request_page_rank(request)]
 
         result = pandas.DataFrame(frames, columns=["target_hostname", "Score_PageRank"])

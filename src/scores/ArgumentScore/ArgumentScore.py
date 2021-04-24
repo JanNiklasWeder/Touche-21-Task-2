@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import requests
-import json
 import regex as re
 import time
 import pandas as pd
@@ -8,16 +7,10 @@ import pandas as pd
 from tqdm import tqdm
 
 # Model Name: targer = classifyWD, classifyNewWD, classifyWD_dep
-
-
 # targer_model = "classifyWD"
 # global underscore
 # underscore = "0.55"
-
-
-"""
-DataFrame doc_df: columns= [neddArgument, topic, query, tag, trec_id, uuid, ...]
-"""
+# DataFrame doc_df: columns= [neddArgument, topic, query, tag, trec_id, uuid, ...]
 
 
 class ArgumentScore:

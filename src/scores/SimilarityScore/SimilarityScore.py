@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
-
-import requests
 import xml.etree.ElementTree as ET
-import time
-from collections import Counter
-from itertools import chain
 import pandas as pd
 from pathlib import Path
 from tqdm import tqdm
-
 
 # install packages
 from simpletransformers.language_representation import RepresentationModel
@@ -116,8 +110,8 @@ class SimilarityScore:
             origin = self.topicid_topic[required_topic_id]
             generated = self.generated_texts[required_topic_id]
             combined_data = [origin + ". " + e for e in generated]
-        except:
-            print("error")
+        except Exception as inst:
+            print(inst)
         return combined_data
 
 

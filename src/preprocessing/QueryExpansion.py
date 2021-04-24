@@ -1,26 +1,19 @@
 # -*- coding: utf-8 -*-
 import logging
 import tarfile
-
 import nltk
 import wget as wget
-
-
 from nltk.corpus import wordnet
-from typing import List
+
+# from typing import List
 import spacy
 
 # en_core_web_md
 import string
 from tqdm import tqdm
-
-from nltk.corpus import wordnet
 from spacy.lang.en.stop_words import STOP_WORDS
 import random
-
-random.seed(10)
 import numpy as np
-from itertools import chain
 
 # packages to find similar words by wordembedding and sense2vec
 from sense2vec import Sense2VecComponent
@@ -28,8 +21,8 @@ from sense2vec import Sense2Vec  # for standalone
 import pandas as pd
 from pathlib import Path
 
-
-#!/usr/bin/python
+random.seed(10)
+# !/usr/bin/python
 
 
 class QueryExpansion:
@@ -156,6 +149,7 @@ class QueryExpansion:
                                 ):
                                     top_similar_words.append(word)
                         except ValueError as err:
+                            print(err)
                             for ent in doc.ents:
                                 if ent.text == token.text:
                                     try:
@@ -170,8 +164,8 @@ class QueryExpansion:
                                             ):
                                                 top_similar_words.append(word)
 
-                                    except ValueError as err:
-
+                                    except Exception as err:
+                                        print(err)
                                         query = token._.s2v_other_senses[
                                             0
                                         ]  # get first similar words by entity_tag

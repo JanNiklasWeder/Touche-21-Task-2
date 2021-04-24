@@ -200,7 +200,6 @@ if __name__ == "__main__":
     parser.add_argument("-a", "--Argumentative", action='store_true', default=False,
                         help="Activate the argumentative score (default: %(default)s)")
 
-
     parser.add_argument("-s", "--Similarity", action='store_true', default=False,
                         help="Activate the similarity score (default: %(default)s)")
 

@@ -31,12 +31,7 @@ def get_titles(file: Path) -> pandas.DataFrame:
 def uuid2doc(uuid, index: str = "cw12"):
     url = "https://www.chatnoir.eu/cache"
 
-    request_data = {
-        "uuid": uuid,
-        "index": index,
-        "raw": "raw",
-        "plain": "plain",
-    }
+    request_data = {"uuid": uuid, "index": index, "raw": "raw", "plain": "plain"}
 
     seconds = 10
 

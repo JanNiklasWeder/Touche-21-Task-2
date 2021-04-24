@@ -1,5 +1,3 @@
-from collections import Counter
-from itertools import chain
 import pandas
 
 # method: max or mean
