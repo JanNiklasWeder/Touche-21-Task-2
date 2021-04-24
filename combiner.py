@@ -1,7 +1,9 @@
 #!/usr/bin/python
 import logging
 import os
+import zipfile
 from pathlib import Path
+import wget as wget
 
 import pandas
 
@@ -77,7 +79,8 @@ class Combine:
             dry_run: bool = False,
             test: bool = True,
             query_size: int = 100,
-            transform_model_name: str = 'gpt'):
+            transform_model_name: str = 'gpt',
+            out_file: Path = None):
         pandas.set_option('display.max_columns', None)
 
         if test:
@@ -118,18 +121,20 @@ class Combine:
             df = chatnoir.get_response(self.topics, query_size)
             df = df.sort_values(by='Score_ChatNoir', ascending=False).reset_index(drop=True)
 
-        #Merging responses if multiple trec_ids
+        # Merging responses if multiple trec_ids
         original_topics = list(self.topics['topic'].unique())
         df = Merge(original_topics, df, weights, method).merging()
 
         if score_argumentative:
-            #add "needArgument", needArgument must be added manually.
-            df['needArgument'] = [tp not in self.noargs for tp in list(df['topic'])] #return true if topic not in noargs, otherwise false
+            # add "needArgument", needArgument must be added manually.
+            df['needArgument'] = [tp not in self.noargs for tp in
+                                  list(df['topic'])]  # return true if topic not in noargs, otherwise false
             targer_model_name = "classifyWD"
             df = ArgumentScore(df, targer_model_name, underscore).get_argument_score()
 
         if score_similarity:
-            df = SimilarityScore(list(self.topics['topic'].unique()), df, transform_model_name).get_similarity_scores() #topics here is the list of orginal titles
+            df = SimilarityScore(list(self.topics['topic'].unique()), df,
+                                 transform_model_name).get_similarity_scores()  # topics here is the list of orginal titles
 
         if score_trustworthiness:
             page_rank = OpenPageRank(auth.get_key("OpenPageRank"))
@@ -137,16 +142,37 @@ class Combine:
             df = page_rank.df_add_score(df)
 
         if score_bert:
-            df = df_add_text(df)
-            bert = Bert(self.wD / "data/bert/")
+            df = df_add_text(df,self.wD)
+
+            path = self.wD / "data/bert/"
+
+            if not path.is_dir():
+                logging.info("Download of the Bert model this may take a moment.")
+                path.mkdir(parents=True, exist_ok=True)
+                path = path.parent / "bert.zip"
+                wget.download(
+                    "https://cloud.uzi.uni-halle.de/owncloud/index.php/s/Zcz1VnGkJwGSeGo/download?path=%2F&files=",
+                    str(path))
+
+                with zipfile.ZipFile(path, "r") as zip_ref:
+                    zip_ref.extractall(path.parent)
+                path.unlink(missing_ok=True)
+                path = path.parent / "bert"
+
+            bert = Bert(path)
             df = bert.df_add_score(df)
 
+        path = self.wD / "data/svm"
         if dry_run:
-            svm.train(df, unique_str, self.wD)
+            svm.train(df, unique_str, path)
             logging.info("Finished dry run")
         else:
-            df = svm.df_add_score(df, unique_str, self.wD)
-            df2trec.write(df, tag=unique_str)
+            df = svm.df_add_score(df, unique_str, path)
+            if out_file is None:
+                df2trec.write(df, tag=unique_str, path=self.wD / "out.trec")
+            else:
+                df2trec.write(df, tag=unique_str, path=out_file)
+
 
 if __name__ == "__main__":
     import argparse
@@ -154,46 +180,52 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("Topics", type=str,
                         help="File path to 'topics-task-2.xml'")
-    parser.add_argument("-P", "--Preprocessing", type=bool, default=True,
+    parser.add_argument("-p", "--Preprocessing", action='store_true', default=False,
                         help="Activate the Preprocessing (default: %(default)s)")
-    parser.add_argument("-E", "--QueryExpansion", type=bool, default=True,
+    parser.add_argument("-e", "--QueryExpansion", action='store_true', default=False,
                         help="Activate the QueryExpansion (default: %(default)s)")
     '''
     NEED WEIGHTS FOR MERGING
     '''
-    parser.add_argument("-W", "--WeightsMerging", 
+
+    parser.add_argument("-w", "--WeightsMerging", 
                         type=str, 
                         default="2; 1.5; 1; 1; 1; 1",
                         help="Adding six weights for merging responses: original; annotation; sensevec; embedded; preprocessing; syns")
 
-    parser.add_argument("-M", "--MergeMethod", type=str, default='max',
+    parser.add_argument("-m", "--MergeMethod", type=str, default='max', metavar='',
                         help="Method for merging responses (default: %(default)s)")
 
-    parser.add_argument("-A", "--Argumentative", type=bool, default=True,
+    parser.add_argument("-a", "--Argumentative", action='store_true', default=False,
                         help="Activate the argumentative score (default: %(default)s)")
 
-    parser.add_argument("-S", "--Similarity", type=bool, default=True,
+
+    parser.add_argument("-s", "--Similarity", type=bool, default=True,
                         help="Activate the similarity score (default: %(default)s)")
 
-    parser.add_argument("-B", "--Bert", action='store_true', default=False,
+    parser.add_argument("-b", "--Bert", action='store_true', default=False,
                         help="Activate the computation of a score via Bert (default: %(default)s)")
 
-    parser.add_argument("-U", "--Underscore", type=float, default=0.55,
+    parser.add_argument("-u", "--Underscore", type=float, default=0.55, metavar='',
                         help="Underscore for argument score (default: %(default)s)")
 
-    parser.add_argument("-T", "--Trustworthiness", type=bool, default=True,
+    parser.add_argument("-t", "--Trustworthiness", action='store_true', default=False,
                         help="Activate the Trustworthiness score (default: %(default)s)")
-    parser.add_argument("-v", "--loglevel", type=str, default="WARNING",
+
+    parser.add_argument("-v", "--loglevel", type=str, default="WARNING", metavar='',
                         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
                         help="Set the detail of the log events (default: %(default)s)")
-    parser.add_argument("-d","--DryRun", action='store_true', default=False,
+
+    parser.add_argument("-d", "--DryRun", action='store_true', default=False,
                         help="Start dry run to train the svm (default: %(default)s)")
+
     parser.add_argument("-o", "--output", type=str, default=str(Path.cwd())+"out.trec",
                         help="File path where the output should be stored (default: %(default)s)")
-    parser.add_argument("--size", type=int, default=100,
+    
+    parser.add_argument("--size", type=int, default=100, metavar='',
                         help="Size of the requested reply from ChatNoir (default: %(default)s)")
-    args = parser.parse_args()
 
+    args = parser.parse_args()
     logging.basicConfig(filename="run.log", level=args.loglevel, filemode='w')
 
     wd = os.getcwd()

@@ -8,8 +8,8 @@ from spacy.lang.en.stop_words import STOP_WORDS
 from typing import List, Union
 import re
 
-class PreProcessing:
 
+class PreProcessing:
     def __init__(self, query: pandas.DataFrame):
         self.querys = query
         self.nlp = spacy.load("en_core_web_md")
@@ -17,21 +17,27 @@ class PreProcessing:
     # ToDo add logging
     def lemma(self) -> None:
         result = []
-        regex = re.compile('[@_!#$%^&*()<>?/\|}{~:,]')
+        regex = re.compile("[@_!#$%^&*()<>?/\|}{~:,]")
 
         for index, row in self.querys.iterrows():
-            
-            buffer = self.nlp(row['query'])
-            tmp=""
-            for token in buffer:
-              if (regex.search(token.lemma_)==None)==False:
-                tmp = tmp + token.lemma_
-              else:
-                tmp = tmp + " " + token.lemma_
-            result.append([row['TopicID'],row['topic'],tmp,'preprocessing'])
 
-        self.querys = pandas.concat([self.querys, pandas.DataFrame(result, columns=['TopicID','topic', 'query', 'tag'])])
-    '''
+            buffer = self.nlp(row["query"])
+            tmp = ""
+            for token in buffer:
+                if (regex.search(token.lemma_) == None) == False:
+                    tmp = tmp + token.lemma_
+                else:
+                    tmp = tmp + " " + token.lemma_
+            result.append([row["TopicID"], row["topic"], tmp, "preprocessing"])
+
+        self.querys = pandas.concat(
+            [
+                self.querys,
+                pandas.DataFrame(result, columns=["TopicID", "topic", "query", "tag"]),
+            ]
+        )
+
+    """
     def stopword(self) -> None:
         result = []
 
@@ -40,17 +46,18 @@ class PreProcessing:
             result.append([row['topic']," ".join(title)])
 
         self.querys = pandas.concat([ pandas.DataFrame(result, columns=['topic', 'query']),self.querys ])
-    '''
+    """
+
     def getQuery(self):
         return self.querys
 
 
-
-
 if __name__ == "__main__":
-    query = ["What is the difference between sex and love?",
-             "What is the difference between sex and love?",
-             "Which is better, a laptop or a desktop?"]
+    query = [
+        "What is the difference between sex and love?",
+        "What is the difference between sex and love?",
+        "Which is better, a laptop or a desktop?",
+    ]
 
     print("Org. query:")
 

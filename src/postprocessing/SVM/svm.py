@@ -17,7 +17,7 @@ class Compound:
         self.svm = svm
         self.mean_sd = mean_sd
         self.scores = scores
-        logging.info("SVM ready | Using the following Scores:\n"+ str(scores))
+        logging.info("SVM ready | Using the following Scores:\n" + str(scores))
 
     @classmethod
     def from_file(cls, unique_str: str, path: Path = Path.cwd() / "data/svm"):
@@ -25,7 +25,7 @@ class Compound:
         svm = joblib.load(path / "svm.joblib")
         mean_sd = pandas.read_csv(path / "mean_sd.csv")
 
-        with open(path / "scores.pickle", 'rb') as filehandle:
+        with open(path / "scores.pickle", "rb") as filehandle:
             scores = pickle.load(filehandle)
 
         return cls(svm, mean_sd, scores)
@@ -43,32 +43,37 @@ class Compound:
         joblib.dump(self.svm, path / "svm.joblib")
         self.mean_sd.to_csv(path / "mean_sd.csv", index=False)
 
-        with open(path / "scores.pickle", 'wb') as filehandle:
+        with open(path / "scores.pickle", "wb") as filehandle:
             pickle.dump(self.scores, filehandle)
 
     def train(self, data: pandas.DataFrame):
 
-        df = data.filter(like='Score_').copy()
+        df = data.filter(like="Score_").copy()
         self.scores = df.columns.values.tolist()
         frames = []
 
         for score in self.scores:
             mean = df[score].mean()
             sd = df[score].std(ddof=0)
-
             frames.append([score, mean, sd])
-            df[score] = (df[score].to_numpy() - mean) / sd
+
+            df[score] = df[score].to_numpy() - mean
+            if sd != 0:
+                df[score] = df[score] / sd
 
             df[score].fillna(mean)
+            df[score] = sigmoid(df[score])
 
-        self.mean_sd = pandas.DataFrame(frames, columns=['score', 'mean', 'sd'])
+        self.mean_sd = pandas.DataFrame(frames, columns=["score", "mean", "sd"])
 
         input = []
         expected = []
 
-        for index, row in tqdm(data.iterrows(), total=data.shape[0], desc="Process data for the SVM"):
+        for index, row in tqdm(
+            data.iterrows(), total=data.shape[0], desc="Process data for the SVM"
+        ):
             input.append(df.loc[index, self.scores].tolist())
-            expected.append(row['qrel'])
+            expected.append(row["qrel"])
 
         self.svm.fit(input, expected)
 
@@ -76,22 +81,29 @@ class Compound:
         df["final"] = numpy.nan
 
         for score in self.scores:
-            row = self.mean_sd.loc[self.mean_sd['score'] == score]
+            row = self.mean_sd.loc[self.mean_sd["score"] == score]
             mean = row["mean"].values[0]
             sd = row["sd"].values[0]
 
-            df[score] = (df[score].to_numpy() - mean) / sd
+            df[score] = df[score] - mean
+            if sd != 0:
+                df[score] = df[score] / sd
 
             df[score].fillna(mean, inplace=True)
+            df[score] = sigmoid(df[score])
 
-        for index, row in tqdm(df.iterrows(),
-                               total=df.shape[0],
-                               desc="Compute final score via SVM:"):
+        for index, row in tqdm(
+            df.iterrows(), total=df.shape[0], desc="Compute final score via SVM:"
+        ):
             feature = numpy.array(row[self.scores]).reshape(1, -1)
 
-            df.loc[index, "final"] = self.svm.predict(feature)
+            df.loc[index, "final"] = np.float64(self.svm.predict(feature))
 
         return df
+
+
+def sigmoid(x):
+    return np.where(x >= 0, 1 / (1 + np.exp(-x)), np.exp(x) / (1 + np.exp(x)))
 
 
 def train(df: pandas.DataFrame, unique_str: str, path: Path = None):
@@ -101,15 +113,14 @@ def train(df: pandas.DataFrame, unique_str: str, path: Path = None):
     if path is None:
         svm.save(unique_str=unique_str)
     else:
-        svm.save(unique_str=unique_str,path = path)
+        svm.save(unique_str=unique_str, path=path)
 
 
 def df_add_score(df: pandas.DataFrame, unique_str: str, path: Path = None):
-
     if path is None:
         svm = Compound.from_file(unique_str=unique_str)
     else:
-        svm = Compound.from_file(unique_str=unique_str,path = path)
+        svm = Compound.from_file(unique_str=unique_str, path=path)
     output = svm.predict(df)
 
     return output
