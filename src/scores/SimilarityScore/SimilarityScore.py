@@ -20,12 +20,18 @@ class SimilarityScore:
         # self.transform_model
         if transform_model_name == "gpt":
             gpt2_model = RepresentationModel(
-                model_type="gpt2", model_name="gpt2-medium", use_cuda=False
+                model_type="gpt2",
+                model_name="gpt2-medium",
+                args={"manual_seed": 42},
+                use_cuda=False,
             )
             self.transform_model = gpt2_model
         if transform_model_name == "bert":
             bert_model = RepresentationModel(
-                model_type="bert", model_name="bert-base-uncased", use_cuda=False
+                model_type="bert",
+                model_name="bert-base-uncased",
+                args={"manual_seed": 42},
+                use_cuda=False,
             )
             self.transform_model = bert_model
 

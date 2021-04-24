@@ -1,17 +1,9 @@
 import pandas
 
-"""
-+ weights:
-    weights['original'] = 
-    weights['preprocessing']=
-    weights['annotation'] = 
-    weights['syns'] = 
-    weights['sensevec'] = (all queries of 'sensevec' haben same weights)
-    weights['embedded'] = (all queries of 'embedded' haben same weights)
-
-+method: max or mean
-output:
-"""
+# method: max or mean
+# all queries of sensevec haven same weights['sensevec']
+# all queries of embedded haven same weights['embedded']
+# exmaple: weights= {'original': 2, 'annotation': 1.5, 'sensevec': 1, 'embedded': 1, 'preprocessing': 1, 'syns': 1}
 
 
 class Merge:
