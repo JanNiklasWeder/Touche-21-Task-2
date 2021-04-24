@@ -191,6 +191,7 @@ if __name__ == "__main__":
     parser.add_argument("-w", "--WeightsMerging", 
                         type=str, 
                         default="2; 1.5; 1; 1; 1; 1",
+                        metavar='',
                         help="Adding six weights for merging responses: original; annotation; sensevec; embedded; preprocessing; syns")
 
     parser.add_argument("-m", "--MergeMethod", type=str, default='max', metavar='',
@@ -200,7 +201,7 @@ if __name__ == "__main__":
                         help="Activate the argumentative score (default: %(default)s)")
 
 
-    parser.add_argument("-s", "--Similarity", type=bool, default=True,
+    parser.add_argument("-s", "--Similarity", action='store_true', default=False,
                         help="Activate the similarity score (default: %(default)s)")
 
     parser.add_argument("-b", "--Bert", action='store_true', default=False,
@@ -219,8 +220,8 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--DryRun", action='store_true', default=False,
                         help="Start dry run to train the svm (default: %(default)s)")
 
-    parser.add_argument("-o", "--output", type=str, default=str(Path.cwd())+"out.trec",
-                        help="File path where the output should be stored (default: %(default)s)")
+    parser.add_argument("-o", "--output", type=str, default=str(Path.cwd()) + "out.trec", metavar='',
+                        help="File path where the output should be stored (default: ./out.trec)")
     
     parser.add_argument("--size", type=int, default=100, metavar='',
                         help="Size of the requested reply from ChatNoir (default: %(default)s)")

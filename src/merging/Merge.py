@@ -7,6 +7,7 @@ import pandas
 # all queries of embedded haven same weights['embedded']
 # exmaple: weights= {'original': 2, 'annotation': 1.5, 'sensevec': 1, 'embedded': 1, 'preprocessing': 1, 'syns': 1}
 
+
 class Merge:
     def __init__(
         self, topics: [str], resp_df: pandas.DataFrame, weights: dict, method: str
@@ -97,7 +98,7 @@ class Merge:
                 final_merged_df = pandas.concat([final_merged_df, merged_df_by_topic])
             else:
                 final_merged_df = pandas.concat([final_merged_df, non_dupl])
-                
+
         # change the name columns for SVM: original Score_ChatNoir will overwrote by Score_ChatNoir_weighted
         final_merged_df = final_merged_df.rename(
             columns={
@@ -105,7 +106,7 @@ class Merge:
                 "Score_ChatNoir_weighted": "Score_ChatNoir",
             }
         )
-    
+
         return final_merged_df.sort_values(
             by="Score_ChatNoir", ascending=False
         ).reset_index(drop=True)
