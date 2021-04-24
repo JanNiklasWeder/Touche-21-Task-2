@@ -2,19 +2,10 @@ from collections import Counter
 from itertools import chain
 import pandas
 
-"""
-+ weights:
-    weights['original'] = 
-    weights['preprocessing']=
-    weights['annotation'] = 
-    weights['syns'] = 
-    weights['sensevec'] = (all queries of 'sensevec' haben same weights)
-    weights['embedded'] = (all queries of 'embedded' haben same weights)
-
-+method: max or mean
-output:
-"""
-
+# method: max or mean
+# all queries of sensevec haven same weights['sensevec']
+# all queries of embedded haven same weights['embedded']
+# exmaple: weights= {'original': 2, 'annotation': 1.5, 'sensevec': 1, 'embedded': 1, 'preprocessing': 1, 'syns': 1}
 
 class Merge:
     def __init__(
@@ -106,6 +97,15 @@ class Merge:
                 final_merged_df = pandas.concat([final_merged_df, merged_df_by_topic])
             else:
                 final_merged_df = pandas.concat([final_merged_df, non_dupl])
+                
+        # change the name columns for SVM: original Score_ChatNoir will overwrote by Score_ChatNoir_weighted
+        final_merged_df = final_merged_df.rename(
+            columns={
+                "Score_ChatNoir": "old_Score_ChatNoir",
+                "Score_ChatNoir_weighted": "Score_ChatNoir",
+            }
+        )
+    
         return final_merged_df.sort_values(
             by="Score_ChatNoir", ascending=False
         ).reset_index(drop=True)
