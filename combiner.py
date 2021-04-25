@@ -77,7 +77,7 @@ class Combine:
             score_similarity: bool = True,
             score_bert: bool = True,
             dry_run: bool = False,
-            test: bool = True,
+            test: bool = False,
             query_size: int = 100,
             transform_model_name: str = 'gpt',
             out_file: Path = None):

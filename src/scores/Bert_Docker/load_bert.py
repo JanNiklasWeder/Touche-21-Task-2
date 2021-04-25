@@ -4,6 +4,7 @@ import logging
 from contextlib import redirect_stderr
 from pathlib import Path
 
+import numpy
 import pandas
 import torch
 from simpletransformers.classification import ClassificationModel
@@ -28,18 +29,24 @@ class Bert:
         )
 
     def predict(self, topic: str, text: str):
-        prediction, raw_output = self.model.predict([[topic, text]])
+        prediction = None
 
-        logging.info("Raw prediction was : " + str(raw_output))
+        try:
+            prediction, raw_output = self.model.predict([[topic, text]])
+            logging.info("Raw prediction was : " + str(raw_output))
+        except AssertionError as error:
+            logging.error("Coudn't predict Score [Error: {0}]\n".format(error) +
+                          "Topic was: " + topic + "\n"
+                          "Text  was: " + text)
         return prediction
 
     def df_add_score(self, df: pandas.DataFrame):
         combinations = df[["topic", "FullText"]].drop_duplicates()
 
         for index, row in tqdm(
-            combinations.iterrows(),
-            total=combinations.shape[0],
-            desc="Bert score progress:",
+                combinations.iterrows(),
+                total=combinations.shape[0],
+                desc="Bert score progress:",
         ):
             f = io.StringIO()
             with redirect_stderr(f):
