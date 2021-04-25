@@ -38,7 +38,9 @@ def uuid2doc(uuid, index: str = "cw12"):
     for attempt in range(10):
         success = False
         try:
-            data = requests.get(url, request_data).text
+            request = requests.get(url, request_data)
+            request.raise_for_status()
+            data = request.text
             success = True
         except Exception as str_error:
             logging.warning(
@@ -132,6 +134,7 @@ class ChatNoir:
             success = False
             try:
                 response = requests.post(url, data=request_data)
+                response.raise_for_status()
                 output = response.json()["results"]
                 success = True
             except Exception as str_error:
