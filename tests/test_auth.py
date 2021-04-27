@@ -12,5 +12,7 @@ class TestAuth(TestCase):
 
         self.assertIsInstance(auth, Auth)
 
-        self.assertTrue(expr=type(auth.get_key("ChatNoir")) is str,
-                        msg="auth does not provide a key for ChatNoir")
+        self.assertTrue(
+            expr=type(auth.get_key("ChatNoir")) is str,
+            msg="auth does not provide a key for ChatNoir",
+        )

@@ -1,12 +1,11 @@
 #!/usr/bin/python
-
-import logging
-
 import pandas
 import spacy
-from spacy.lang.en.stop_words import STOP_WORDS
-from typing import List, Union
 import re
+
+# from spacy.lang.en.stop_words import STOP_WORDS
+# from typing import List, Union
+# import logging
 
 
 class PreProcessing:
@@ -18,13 +17,12 @@ class PreProcessing:
     def lemma(self) -> None:
         result = []
         regex = re.compile("[@_!#$%^&*()<>?/\|}{~:,]")
-
         for index, row in self.querys.iterrows():
 
             buffer = self.nlp(row["query"])
             tmp = ""
             for token in buffer:
-                if (regex.search(token.lemma_) == None) == False:
+                if (regex.search(token.lemma_) is None) is False:
                     tmp = tmp + token.lemma_
                 else:
                     tmp = tmp + " " + token.lemma_
@@ -37,16 +35,12 @@ class PreProcessing:
             ]
         )
 
-    """
-    def stopword(self) -> None:
-        result = []
-
-        for index, row in self.querys.iterrows():
-            title = [w for w in row['query'].split(" ") if w not in STOP_WORDS]
-            result.append([row['topic']," ".join(title)])
-
-        self.querys = pandas.concat([ pandas.DataFrame(result, columns=['topic', 'query']),self.querys ])
-    """
+    # def stopword(self) -> None:
+    #    result = []
+    #    for index, row in self.querys.iterrows():
+    #        title = [w for w in row['query'].split(" ") if w not in STOP_WORDS]
+    #        result.append([row['topic']," ".join(title)])
+    #     self.querys = pandas.concat([ pandas.DataFrame(result, columns=['topic', 'query']),self.querys ])
 
     def getQuery(self):
         return self.querys

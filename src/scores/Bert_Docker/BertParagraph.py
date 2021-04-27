@@ -27,11 +27,7 @@ transformers_logger.setLevel(logging.WARNING)
 
 
 def reset_wandb_env():
-    exclude = {
-        "WANDB_PROJECT",
-        "WANDB_ENTITY",
-        "WANDB_API_KEY",
-    }
+    exclude = {"WANDB_PROJECT", "WANDB_ENTITY", "WANDB_API_KEY"}
     for k, v in os.environ.items():
         if k.startswith("WANDB_") and k not in exclude:
             del os.environ[k]
@@ -50,12 +46,7 @@ def get_titles(file):
 def simpleSearch(data, size):
     url = "https://www.chatnoir.eu/api/v1/_search"
 
-    request_data = {
-        "apikey": "--",
-        "query": data,
-        "size": size,
-        "index": ["cw12"],
-    }
+    request_data = {"apikey": "--", "query": data, "size": size, "index": ["cw12"]}
 
     return requests.post(url, data=request_data).json()
 
@@ -63,12 +54,7 @@ def simpleSearch(data, size):
 def retrievingFullDocuments(uuid, index):
     url = "https://www.chatnoir.eu/cache"
 
-    request_data = {
-        "uuid": uuid,
-        "index": index,
-        "raw": "raw",
-        "plain": "plain",
-    }
+    request_data = {"uuid": uuid, "index": index, "raw": "raw", "plain": "plain"}
 
     data = requests.get(url, request_data).text
     data = re.sub("<[^>]+>", "", data)
@@ -363,7 +349,7 @@ class Bert:
         if freezeEncoder:
             model_args.train_custom_parameters_only = True
             model_args.custom_parameter_groups = [
-                {"params": ["classifier.weight", "classifier.bias"], "lr": 1e-4,},
+                {"params": ["classifier.weight", "classifier.bias"], "lr": 1e-4}
             ]
 
         # Create a ClassificationModel
@@ -393,7 +379,7 @@ class Bert:
 
         output = []
         for index, row in test_df.iterrows():
-            predictions, raw_outputs = model.predict([[row["text_a"], row["text_b"],]])
+            predictions, raw_outputs = model.predict([[row["text_a"], row["text_b"]]])
             output.append(predictions)
 
         test_df["predictions"] = output
@@ -420,7 +406,7 @@ class Bert:
         output = []
         for index, row in data.iterrows():
             predictions, raw_outputs = self.model.predict(
-                [[row["Topic"], row["FullText"],]]
+                [[row["Topic"], row["FullText"]]]
             )
 
             row["BertScore"] = predictions
