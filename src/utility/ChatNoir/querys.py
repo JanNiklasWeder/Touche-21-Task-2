@@ -56,7 +56,7 @@ def uuid2doc(uuid, index: str = "cw12"):
             time.sleep(seconds)
             seconds += seconds
             if attempt == 9:
-                logging.critical("Failed 10 times. Exiting ...")
+                logging.critical("Failed 10 times. Skipping ...")
                 return None
 
         if success:
@@ -156,7 +156,7 @@ class ChatNoir:
                 time.sleep(seconds)
                 seconds += seconds
                 if attempt == 9:
-                    logging.critical("Failed 10 times. Exiting ...")
+                    logging.critical("Failed 10 times. Skipping ...")
                     return None
 
             if success:
