@@ -56,8 +56,8 @@ def uuid2doc(uuid, index: str = "cw12"):
             time.sleep(seconds)
             seconds += seconds
             if attempt == 9:
-                logging.critical("Failed 10 times. Exiting ...")
-                exit(1)
+                logging.critical("Failed 10 times. Skipping ...")
+                return None
 
         if success:
             break
@@ -156,8 +156,8 @@ class ChatNoir:
                 time.sleep(seconds)
                 seconds += seconds
                 if attempt == 9:
-                    logging.critical("Failed 10 times. Exiting ...")
-                    exit(1)
+                    logging.critical("Failed 10 times. Skipping ...")
+                    return None
 
             if success:
                 break
@@ -197,21 +197,26 @@ class ChatNoir:
                 logging.debug("Getting response for '%s'" % query)
                 response = self.api(query, querysize)
                 logging.debug(response)
-                for answer in response:
-                    # clean html tags
-                    answer["title"] = re.sub(clean, "", answer["title"])
-                    answer["snippet"] = re.sub(clean, "", answer["snippet"])
 
-                    buffer = (
-                        query,
-                        answer["trec_id"],
-                        answer["uuid"],
-                        answer["title"],
-                        answer["snippet"],
-                        answer["target_hostname"],
-                        answer["score"],
-                    )
-                    answers.append(buffer)
+                try:
+                    for answer in response:
+                        # clean html tags
+                        answer["title"] = re.sub(clean, "", answer["title"])
+                        answer["snippet"] = re.sub(clean, "", answer["snippet"])
+
+                        buffer = (
+                            query,
+                            answer["trec_id"],
+                            answer["uuid"],
+                            answer["title"],
+                            answer["snippet"],
+                            answer["target_hostname"],
+                            answer["score"],
+                        )
+                        answers.append(buffer)
+                except Exception as error:
+                    logging.warn("Error reading response skipping this one\n"+
+                                 error)
 
             answer = pandas.DataFrame(
                 answers,
