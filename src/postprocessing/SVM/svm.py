@@ -13,7 +13,8 @@ from tqdm import tqdm
 
 
 class Compound:
-    def __init__(self, svm: sklearn_svm, mean_sd: pandas.DataFrame, scores: List):
+    def __init__(self, svm: sklearn_svm, mean_sd: pandas.DataFrame,
+                 scores: List):
         self.svm = svm
         self.mean_sd = mean_sd
         self.scores = scores
@@ -61,17 +62,18 @@ class Compound:
             if sd != 0:
                 df[score] = df[score] / sd
 
-            df[score].fillna(mean)
+            df[score].fillna(mean, inplace=True)
             df[score] = sigmoid(df[score])
 
-        self.mean_sd = pandas.DataFrame(frames, columns=["score", "mean", "sd"])
+        self.mean_sd = pandas.DataFrame(frames,
+                                        columns=["score", "mean", "sd"])
 
         input = []
         expected = []
 
-        for index, row in tqdm(
-            data.iterrows(), total=data.shape[0], desc="Process data for the SVM"
-        ):
+        for index, row in tqdm(data.iterrows(),
+                               total=data.shape[0],
+                               desc="Process data for the SVM"):
             input.append(df.loc[index, self.scores].tolist())
             expected.append(row["qrel"])
 
@@ -92,9 +94,9 @@ class Compound:
             df[score].fillna(mean, inplace=True)
             df[score] = sigmoid(df[score])
 
-        for index, row in tqdm(
-            df.iterrows(), total=df.shape[0], desc="Compute final score via SVM:"
-        ):
+        for index, row in tqdm(df.iterrows(),
+                               total=df.shape[0],
+                               desc="Compute final score via SVM:"):
             feature = numpy.array(row[self.scores]).reshape(1, -1)
 
             df.loc[index, "final"] = np.float64(self.svm.predict(feature))
