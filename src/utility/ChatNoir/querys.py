@@ -31,7 +31,12 @@ def get_titles(file: Path) -> pandas.DataFrame:
 def uuid2doc(uuid, index: str = "cw12"):
     url = "https://www.chatnoir.eu/cache"
 
-    request_data = {"uuid": uuid, "index": index, "raw": "raw", "plain": "plain"}
+    request_data = {
+        "uuid": uuid,
+        "index": index,
+        "raw": "raw",
+        "plain": "plain"
+    }
 
     seconds = 10
 
@@ -44,8 +49,7 @@ def uuid2doc(uuid, index: str = "cw12"):
             success = True
         except Exception as str_error:
             logging.warning(
-                "Cannot retrieve Documents. Retrying in %s seconds" % seconds
-            )
+                "Cannot retrieve Documents. Retrying in %s seconds" % seconds)
             logging.warning("Code: %s" % str_error)
 
             time.sleep(seconds)
@@ -64,7 +68,8 @@ def uuid2doc(uuid, index: str = "cw12"):
     return data
 
 
-def uuids2df(uuid: pandas.DataFrame, path: Path = Path.cwd()) -> pandas.DataFrame:
+def uuids2df(
+    uuid: pandas.DataFrame, path: Path = Path.cwd()) -> pandas.DataFrame:
     save_path = Path(path) / "data/ChatNoirCache"
     save_path.mkdir(exist_ok=True, parents=True)
 
@@ -112,7 +117,10 @@ def df_add_text(df: pandas.DataFrame, path: Path = Path.cwd()):
 
 
 class ChatNoir:
-    def __init__(self, key: str, working_directory: Path, corpus: List[str] = ["cw12"]):
+    def __init__(self,
+                 key: str,
+                 working_directory: Path,
+                 corpus: List[str] = ["cw12"]):
         self.key = key
         self.corpus = corpus
         self.workingDir = working_directory / "data/ChatNoirCache"
@@ -139,12 +147,13 @@ class ChatNoir:
                 success = True
             except Exception as str_error:
                 logging.warning(
-                    "Cannot retrieve Documents. Retrying in %s seconds" % seconds
-                )
+                    "Cannot retrieve Documents. Retrying in %s seconds" %
+                    seconds)
                 logging.warning("Code: %s" % str_error)
 
                 try:
-                    logging.warning("Response was : %s\nFor query: %s" % (response,data))
+                    logging.warning("Response was : %s\nFor query: %s" %
+                                    (response, data))
                 except NameError:
                     continue
 
@@ -159,7 +168,8 @@ class ChatNoir:
 
         return output
 
-    def get_response(self, data: pandas.DataFrame, querysize: int) -> pandas.DataFrame:
+    def get_response(self, data: pandas.DataFrame,
+                     querysize: int) -> pandas.DataFrame:
         querys = data["query"].tolist()
 
         querysize = str(querysize)
@@ -197,7 +207,8 @@ class ChatNoir:
                     for answer in response:
                         # clean html tags
                         answer["title"] = re.sub(clean, "", answer["title"])
-                        answer["snippet"] = re.sub(clean, "", answer["snippet"])
+                        answer["snippet"] = re.sub(clean, "",
+                                                   answer["snippet"])
 
                         buffer = (
                             query,
@@ -210,7 +221,9 @@ class ChatNoir:
                         )
                         answers.append(buffer)
                 except Exception as error:
-                    logging.warn("Error reading response skipping this one\n %s" % error)
+                    logging.warn(
+                        "Error reading response skipping this one\n %s" %
+                        error)
 
             answer = pandas.DataFrame(
                 answers,
