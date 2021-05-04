@@ -17,7 +17,8 @@ class ArgumentScore:
     # doc must be preprocessed bevor argument score. See SimilarityScore
     # needArgument describes argumentative topic
 
-    def __init__(self, doc_df: pd.DataFrame, targer_model_name: str, underscore: float):
+    def __init__(self, doc_df: pd.DataFrame, targer_model_name: str,
+                 underscore: float):
 
         self.doc_df = doc_df.reset_index(drop=True)
         self.targer_model = targer_model_name
@@ -26,10 +27,10 @@ class ArgumentScore:
     def get_argument_score(self):
         argScores = []
 
-        for i in tqdm(
-            range(0, len(self.doc_df.index)), desc="Argument score progress:"
-        ):
-            doc = self.doc_df.iloc[i]["title"] + ". " + self.doc_df.iloc[i]["snippet"]
+        for i in tqdm(range(0, len(self.doc_df.index)),
+                      desc="Argument score progress:"):
+            doc = self.doc_df.iloc[i]["title"] + ". " + self.doc_df.iloc[i][
+                "snippet"]
             needArgument = self.doc_df.iloc[i]["needArgument"]
 
             if needArgument:
@@ -41,12 +42,12 @@ class ArgumentScore:
                     arg_labels_probas = []
                     for ents_list in resp:
                         for ent in ents_list:
-                            if ent["label"].endswith("-B") or ent["label"].endswith(
-                                "-I"
-                            ):
+                            if ent["label"].endswith(
+                                    "-B") or ent["label"].endswith("-I"):
                                 count_arg_labels += 1
                                 sum_probs = sum_probs + float(ent["prob"])
-                                arg_labels_probas.append((ent["label"], ent["prob"]))
+                                arg_labels_probas.append(
+                                    (ent["label"], ent["prob"]))
                     if count_arg_labels == 0:
                         argScores.append(0)
                     else:
@@ -59,9 +60,8 @@ class ArgumentScore:
                     count_arg_labels = 0
                     for ents_list in resp:
                         for ent in ents_list:
-                            if ent["label"].endswith("-B") or ent["label"].endswith(
-                                "-I"
-                            ):
+                            if ent["label"].endswith(
+                                    "-B") or ent["label"].endswith("-I"):
                                 count_arg_labels += 1
                     avg_argScore = count_arg_labels / len(resp)
                     if avg_argScore <= float(underscore):
@@ -84,9 +84,10 @@ class ArgumentScore:
 
         def targer():
             try:
-                response = requests.request(
-                    "POST", url, headers=headers, data=payload.encode("utf-8")
-                )
+                response = requests.request("POST",
+                                            url,
+                                            headers=headers,
+                                            data=payload.encode("utf-8"))
                 response.raise_for_status()
                 return response.json()
             except requests.exceptions.RequestException:
