@@ -36,8 +36,8 @@ class Bert:
             logging.info("Raw prediction was : " + str(raw_output))
         except AssertionError as error:
             logging.error("Coudn't predict Score [Error: {0}]\n".format(error) +
-                          "Topic was: " + topic + "\n"
-                          "Text  was: " + text)
+                          "Topic was: " + str(topic) + "\n"
+                          "Text  was: " + str(text))
         return prediction
 
     def df_add_score(self, df: pandas.DataFrame):

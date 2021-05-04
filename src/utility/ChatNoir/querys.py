@@ -144,7 +144,7 @@ class ChatNoir:
                 logging.warning("Code: %s" % str_error)
 
                 try:
-                    logging.warning("Response was : %s" % response)
+                    logging.warning("Response was : %s\nFor query: %s" % (response,data))
                 except NameError:
                     continue
 
@@ -210,8 +210,7 @@ class ChatNoir:
                         )
                         answers.append(buffer)
                 except Exception as error:
-                    logging.warn("Error reading response skipping this one\n"+
-                                 error)
+                    logging.warn("Error reading response skipping this one\n %s" % error)
 
             answer = pandas.DataFrame(
                 answers,
