@@ -29,7 +29,8 @@ class ArgumentScore:
         for i in tqdm(
             range(0, len(self.doc_df.index)), desc="Argument score progress:"
         ):
-            doc = self.doc_df.iloc[i]["title"] + ". " + self.doc_df.iloc[i]["snippet"]
+            doc = self.doc_df.iloc[i]["title"] + \
+                ". " + self.doc_df.iloc[i]["snippet"]
             needArgument = self.doc_df.iloc[i]["needArgument"]
 
             if needArgument:
@@ -46,7 +47,8 @@ class ArgumentScore:
                             ):
                                 count_arg_labels += 1
                                 sum_probs = sum_probs + float(ent["prob"])
-                                arg_labels_probas.append((ent["label"], ent["prob"]))
+                                arg_labels_probas.append(
+                                    (ent["label"], ent["prob"]))
                     if count_arg_labels == 0:
                         argScores.append(0)
                     else:
