@@ -64,7 +64,8 @@ class Compound:
             df[score].fillna(mean, inplace=True)
             df[score] = sigmoid(df[score])
 
-        self.mean_sd = pandas.DataFrame(frames, columns=["score", "mean", "sd"])
+        self.mean_sd = pandas.DataFrame(
+            frames, columns=["score", "mean", "sd"])
 
         input = []
         expected = []

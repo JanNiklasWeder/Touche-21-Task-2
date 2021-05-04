@@ -54,5 +54,6 @@ class Bert:
                     row["topic"], row["FullText"]
                 )
 
-        result = pandas.merge(df, combinations, on=["topic", "FullText"], how="left")
+        result = pandas.merge(df, combinations, on=[
+                              "topic", "FullText"], how="left")
         return result
