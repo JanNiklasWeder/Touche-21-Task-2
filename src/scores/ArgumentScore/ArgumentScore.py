@@ -89,8 +89,8 @@ class ArgumentScore:
                 )
                 response.raise_for_status()
                 return response.json()
-            except requests.exceptions.HTTPError:
-                time.sleep(1)
+            except requests.exceptions.RequestException:
+                time.sleep(10)
                 return targer()
 
         response = targer()
