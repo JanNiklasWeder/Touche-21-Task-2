@@ -187,20 +187,21 @@ if __name__ == "__main__":
     '''
     NEED WEIGHTS FOR MERGING
     '''
-    parser.add_argument("-w", "--WeightsMerging", type=dict, metavar='', default={
-        'original': 5,
-        'annotation': 4,
-        'sensevec': 3,
-        'embedded': 3,
-        'preprocessing': 2,
-        'syns': 1},
-                        help="Adding weights for merging responses")
 
+    parser.add_argument("-w", "--WeightsMerging", 
+                        type=str, 
+                        default="2; 1.5; 1; 1; 1; 1",
+                        metavar='',
+                        help="Adding six weights for merging responses: original; annotation; sensevec; embedded; preprocessing; syns")
+  
     parser.add_argument("-m", "--MergeMethod", type=str, default='max', metavar='',
                         help="Method for merging responses (default: %(default)s)")
 
     parser.add_argument("-a", "--Argumentative", action='store_true', default=False,
                         help="Activate the argumentative score (default: %(default)s)")
+
+    parser.add_argument("-s", "--Similarity", action='store_true', default=False,
+                        help="Activate the similarity score (default: %(default)s)")
 
     parser.add_argument("-b", "--Bert", action='store_true', default=False,
                         help="Activate the computation of a score via Bert (default: %(default)s)")
@@ -221,7 +222,7 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output", type=str, default=str(Path.cwd()) + "out.trec", metavar='',
                         help="File path where the output should be stored (default: ./out.trec)")
 
-    parser.add_argument("-s", "--size", type=int, default=100, metavar='',
+    parser.add_argument("--size", type=int, default=100, metavar='',
                         help="Size of the requested reply from ChatNoir (default: %(default)s)")
 
     args = parser.parse_args()
@@ -231,12 +232,23 @@ if __name__ == "__main__":
 
     combiner = Combine(args.Topics, wd)
 
+    weights = [float(e.strip()) for e in args.WeightsMerging.split(";")]
+    tags = ['original', 'annotation', 'sensevec', 'embedded', 'preprocessing', 'syns']
+    try:
+        weightsDictionary = {tags[i]:weights[i] for i in range(0,len(tags))}
+    except Exception as inst: #when user input doesn't match the required length of weights
+        print("ERROR:" + str(inst))
+        print("incorrected input's format, using default weights")
+        weightsDictionary = {'original': 2, 'annotation': 1.5, 'sensevec': 1, 'embedded': 1, 'preprocessing': 1,
+                             'syns': 1}
+    
     combiner.run(preprocessing=args.Preprocessing,
                  query_expansion=args.QueryExpansion,
-                 weights=args.WeightsMerging,
+                 weights=weightsDictionary,
                  method=args.MergeMethod,
                  score_argumentative=args.Argumentative,
                  underscore=args.Underscore,
+                 score_similarity=args.Similarity,
                  score_trustworthiness=args.Trustworthiness,
                  score_bert=args.Bert,
                  dry_run=args.DryRun,

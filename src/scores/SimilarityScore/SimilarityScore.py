@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
-
-import requests
 import xml.etree.ElementTree as ET
-import time
-from collections import Counter
-from itertools import chain
 import pandas as pd
 from pathlib import Path
 from tqdm import tqdm
-
 
 # install packages
 from simpletransformers.language_representation import RepresentationModel
@@ -26,12 +20,18 @@ class SimilarityScore:
         # self.transform_model
         if transform_model_name == "gpt":
             gpt2_model = RepresentationModel(
-                model_type="gpt2", model_name="gpt2-medium", use_cuda=False
+                model_type="gpt2",
+                model_name="gpt2-medium",
+                args={"manual_seed": 42},
+                use_cuda=False,
             )
             self.transform_model = gpt2_model
         if transform_model_name == "bert":
             bert_model = RepresentationModel(
-                model_type="bert", model_name="bert-base-uncased", use_cuda=False
+                model_type="bert",
+                model_name="bert-base-uncased",
+                args={"manual_seed": 42},
+                use_cuda=False,
             )
             self.transform_model = bert_model
 
@@ -110,8 +110,8 @@ class SimilarityScore:
             origin = self.topicid_topic[required_topic_id]
             generated = self.generated_texts[required_topic_id]
             combined_data = [origin + ". " + e for e in generated]
-        except:
-            print("error")
+        except Exception as inst:
+            print(inst)
         return combined_data
 
 

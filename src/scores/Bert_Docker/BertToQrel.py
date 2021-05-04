@@ -12,12 +12,7 @@ import xml.etree.ElementTree as ET
 def retrievingFullDocuments(uuid):
     url = "https://www.chatnoir.eu/cache"
 
-    request_data = {
-        "uuid": uuid,
-        "index": "cw12",
-        "raw": "raw",
-        "plain": "plain",
-    }
+    request_data = {"uuid": uuid, "index": "cw12", "raw": "raw", "plain": "plain"}
 
     data = requests.get(url, request_data).text
     data = re.sub("<[^>]+>", "", data)
@@ -104,7 +99,7 @@ if __name__ == "__main__":
         output = []
         for index, row in data_for_topic.iterrows():
             predictions, raw_outputs = model.predict(
-                [[row["Topic"], retrievingFullDocuments(row["UUID"]),]]
+                [[row["Topic"], retrievingFullDocuments(row["UUID"])]]
             )
 
             output.append(predictions[0])
