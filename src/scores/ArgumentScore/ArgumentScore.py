@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-import requests
-import regex as re
 import time
-import pandas as pd
 
+import pandas as pd
+import regex as re
+import requests
 from tqdm import tqdm
 
 # Model Name: targer = classifyWD, classifyNewWD, classifyWD_dep
