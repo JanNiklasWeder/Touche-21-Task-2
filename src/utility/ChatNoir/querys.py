@@ -31,8 +31,7 @@ def get_titles(file: Path) -> pandas.DataFrame:
 def uuid2doc(uuid, index: str = "cw12"):
     url = "https://www.chatnoir.eu/cache"
 
-    request_data = {"uuid": uuid, "index": index,
-                    "raw": "raw", "plain": "plain"}
+    request_data = {"uuid": uuid, "index": index, "raw": "raw", "plain": "plain"}
 
     seconds = 10
 
@@ -146,7 +145,8 @@ class ChatNoir:
 
                 try:
                     logging.warning(
-                        "Response was : %s\nFor query: %s" % (response, data))
+                        "Response was : %s\nFor query: %s" % (response, data)
+                    )
                 except NameError:
                     continue
 
@@ -199,8 +199,7 @@ class ChatNoir:
                     for answer in response:
                         # clean html tags
                         answer["title"] = re.sub(clean, "", answer["title"])
-                        answer["snippet"] = re.sub(
-                            clean, "", answer["snippet"])
+                        answer["snippet"] = re.sub(clean, "", answer["snippet"])
 
                         buffer = (
                             query,
@@ -214,7 +213,8 @@ class ChatNoir:
                         answers.append(buffer)
                 except Exception as error:
                     logging.warn(
-                        "Error reading response skipping this one\n %s" % error)
+                        "Error reading response skipping this one\n %s" % error
+                    )
 
             answer = pandas.DataFrame(
                 answers,

@@ -35,18 +35,22 @@ class Bert:
             prediction, raw_output = self.model.predict([[topic, text]])
             logging.info("Raw prediction was : " + str(raw_output))
         except AssertionError as error:
-            logging.error("Coudn't predict Score [Error: {0}]\n".format(error) +
-                          "Topic was: " + str(topic) + "\n"
-                          "Text  was: " + str(text))
+            logging.error(
+                "Coudn't predict Score [Error: {0}]\n".format(error)
+                + "Topic was: "
+                + str(topic)
+                + "\n"
+                "Text  was: " + str(text)
+            )
         return prediction
 
     def df_add_score(self, df: pandas.DataFrame):
         combinations = df[["topic", "FullText"]].drop_duplicates()
 
         for index, row in tqdm(
-                combinations.iterrows(),
-                total=combinations.shape[0],
-                desc="Bert score progress:",
+            combinations.iterrows(),
+            total=combinations.shape[0],
+            desc="Bert score progress:",
         ):
             f = io.StringIO()
             with redirect_stderr(f):
@@ -54,6 +58,5 @@ class Bert:
                     row["topic"], row["FullText"]
                 )
 
-        result = pandas.merge(df, combinations, on=[
-                              "topic", "FullText"], how="left")
+        result = pandas.merge(df, combinations, on=["topic", "FullText"], how="left")
         return result
